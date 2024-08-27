@@ -52,6 +52,8 @@ for j = 2:(r - 1)
     w(n - 1,j + 1) =  (w(n,j + 1) + w(n - 2,j + 1))/2;
 
     w_3D_free(1 + j,:) = w(:,j)';
+
+    % Chuyển động của xe nâng
 end
 
 w_3D_free(1,:) = w(:,1)';
