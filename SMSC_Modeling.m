@@ -11,7 +11,7 @@ L = 1.5; EI = 14.97; rho_A = .21;
 mw = 13.1; mk = 0.19;
 
 % Thiết lập thông số không gian và thời gian
-n = 3; r = 3000;
+n = 3; r = 1500;
 tmax = 15;
 delta_Y = L/(n - 1); % Bước không gian
 delta_t = tmax/(r - 1); % Bước thời gian
