@@ -11,7 +11,7 @@ L = 1.5; EI = 14.97; rho_A = .21;
 mw = 13.1; mk = 0.19;
 
 % Thiết lập thông số không gian và thời gian
-n = 3; r = 1500;
+n = 3; r = 3000;
 tmax = 15;
 delta_Y = L/(n - 1); % Bước không gian
 delta_t = tmax/(r - 1); % Bước thời gian
@@ -24,6 +24,8 @@ w_3D_free = zeros(r,n);
 % Lực tác động vào xe con
 F1 = zeros(1,r);
 F1(1:r) = 10;
+
+% Lực tác động vào xe nâng
 
 for j = 2:(r - 1)
     for i = 3:(n - 2)
@@ -54,6 +56,7 @@ for j = 2:(r - 1)
     w_3D_free(1 + j,:) = w(:,j)';
 
     % Chuyển động của xe nâng
+    
 end
 
 w_3D_free(1,:) = w(:,1)';

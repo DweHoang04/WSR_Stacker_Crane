@@ -28,7 +28,7 @@ x2 = zeros(1,r); % Tọa độ của xe nâng theo phương Oy
 x3 = zeros(1,r); % Tọa độ của xe nâng theo phương Ox
 F1(1:r/2) = 10; % Chưa rõ dùng để làm gì?
 F1(r/2:r) = 10;
-% F2(1:r/2) = 8; F2(r/2:r) = 0;
+F2(1:r/2) = 8; F2(r/2:r) = 0;
 p = zeros(1,r); 
 w = zeros(n,r);
 
