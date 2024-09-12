@@ -6,10 +6,10 @@ clear;
 %--------------------------------------------------------------------------
 
 % Parameter of the Euler - Bernoulli Beam
-l = 1.5; m = 1; EI = 8; EA = 14; T = 15; rho = 0.1;
+l = 1.5; m = 1; EI = 8; EA = 14; T = 0; rho = 0.1;
 
 % Space and Time parameters
-n = 3; r = 1500;
+n = 9; r = 15000;
 tmax = 15;
 delta_s = l/(n - 1); % Spatial step size
 delta_t = tmax/(r - 1); % Temporal step size
