@@ -8,7 +8,7 @@ pA = 0.297; EI = 0.754; L = 0.63;
 mw = 13.1; mk = 0.04;
 
 % Thông số không gian và thời gian
-n = 7; r = 1000000;
+n = 7; r = 500000;
 tmax = 15;
 dt = tmax/(r - 1);
 ds = L/(n - 1); 
