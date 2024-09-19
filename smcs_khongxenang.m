@@ -2,13 +2,13 @@ clc;
 close all;
 clear;
 % Thông số của dầm
-pA = 2.4; EI = 0.4; L = 0.7; 
+pA = 0.297; EI = 0.754; L = 0.63; 
 
 % Các vật nặng
-mw = 13.1; mk = 0.2;
+mw = 13.1; mk = 0.04;
 
 % Thông số không gian và thời gian
-n = 10; r = 50000;
+n = 7; r = 1000000;
 tmax = 15;
 dt = tmax/(r - 1);
 ds = L/(n - 1); 
@@ -16,7 +16,11 @@ ds = L/(n - 1);
 % Lực tác động vào xe con
 F1 = zeros(1,r);
 F1(1:r/2) = 10;
-F1(r/2:r) = 0;
+
+% Lực tác động vào xe nâng
+F2 = zeros(1,r);
+F2(1:r/2) = 10;
+
 w = zeros(n,r);
 %--------------------------------------------------------------------------
 for j = 2:(r - 1)

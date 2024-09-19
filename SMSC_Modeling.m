@@ -8,10 +8,10 @@ clear;
 % Thiết lập các thông số cho dầm
 L = 0.63; EI = 0.754; rho_A = .297;
 % Các vật nặng 
-mw = 13.1; mk = 0.04;
+mw = 13.1; mk = 0.04; mh = 0.86; g = 9.81;
 
 % Thiết lập thông số không gian và thời gian
-n = 9; r = 4500000;
+n = 5; r = 80000;
 tmax = 15;
 delta_Y = L/(n - 1); % Bước không gian
 delta_t = tmax/(r - 1); % Bước thời gian
@@ -23,54 +23,56 @@ w_3D_free = zeros(r,n);
 
 % Lực tác động vào xe con
 F1 = zeros(1,r);
-F1(1:r) = 10;
-
+F1(1) = 10000;
 
 % Lực tác động vào xe nâng
+F2 = zeros(1,r);
+F2(1:1000) = 10;
 
+%--------------------------------------------------------------------------
 for j = 2:(r - 1)
     wyyy0 = (w(3,j) - 2*w(2,j) + w(1,j))/(2*delta_Y^3);
     S2 = (F1(j) - EI*wyyy0)/mw;
-    w(1,j + 1) = 2*w(1,j) - w(1,j - 1) + delta_t^2*S2;
+    w(1,j + 1) = 2*w(1,j) - w(1,j - 1) + delta_t^2*S2; % 5b
     for i = 3:(n - 2)
         % Đạo hàm theo Y
+        wy = (w(i + 1,j) - w(i - 1,j))/(2*delta_Y);
+        wyyy = (w(i + 2,j) - 2*w(i + 1,j) + 2*w(i - 1,j) - w(i - 2,j));
         wyyyy = (w(i + 2,j) - 4*w(i + 1,j) + 6*w(i,j) - 4*w(i - 1,j) + w(i - 2,j))/delta_Y^4;
 
         S1 = (-EI/rho_A)*wyyyy;
         
-        % Chuyển động của dầm Euler - Bernoulli
-        w(i,j + 1) = 2*w(i,j) - w(i,j - 1) + delta_t^2*S1;
+        % Độ lắc của dầm Euler - Bernoulli
+        w(i,j + 1) = 2*w(i,j) - w(i,j - 1) + delta_t^2*S1; % 5a
     end
-
     wyyyl = (-2*w(n,j) + 3*w(n - 1,j) - w(n - 2,j))/(2*delta_Y^3);
-    
     S3 = (EI/mk)*wyyyl;
     w(2,j + 1) = w(1,j + 1);
-    w(n,j + 1) = 2*w(n,j) - w(n,j - 1) + delta_t^2*S3;
-    
-    w(n - 1,j + 1) =  (w(n,j + 1) + w(n - 2,j + 1))/2;
-
-    w_3D_free(1 + j,:) = w(:,j)';
-
+    w(n,j + 1) = 2*w(n,j) - w(n,j - 1) + delta_t^2*S3; % 5e
+    w(n - 1,j + 1) = (w(n,j + 1) + w(n - 2,j + 1))/2;
+%--------------------------------------------------------------------------
     % Chuyển động của xe nâng
+    dx3dt2 = (wx3(j + 1) - 2*wx3(j) + wx3(j - 1))/(2*delta_t^2);
+    wyx2 = (w(n - 1) - w(n - 3))/(2*delta_s^2);
     
-end
 
-w_3D_free(1,:) = w(:,1)';
+    % w_3D_free(1 + j,:) = w(:,j)';
+end
 
 % Khởi tạo giá trị để mô phỏng
 w0 = linspace(0,1,n);
 t_tr = linspace(0,tmax,r);
 
 % Vẽ biểu đồ
-figure(1);
-grid on;
-hold on;
-surf(w0,t_tr,w_3D_free); view(45,30);
-title({'Dao động của thanh khi không có điều khiển'});
-ylabel('t','FontSize',12);
-xlabel('y','FontSize',12);
-zlabel('w(Y,t)','FontSize',12);
+% w_3D_free(1,:) = w(:,1)';
+% figure(1);
+% grid on;
+% hold on;
+% surf(w0,t_tr,w_3D_free); view(45,30);
+% title({'Dao động của thanh khi không có điều khiển'});
+% ylabel('t','FontSize',12);
+% xlabel('y','FontSize',12);
+% zlabel('w(Y,t)','FontSize',12);
 
 figure(2)
 grid on;
