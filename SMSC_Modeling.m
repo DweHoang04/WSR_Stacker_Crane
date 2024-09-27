@@ -21,7 +21,7 @@ w = zeros(n,r);
 x3 = zeros(1,r); % Độ lắc của thanh tại x2 (x3)
 x2 = 2; 
 dx2dt_2 = zeros(1,r);
-dx2dt_2(1:2) = delta_Y;
+dx2dt_2(1:3) = delta_Y;
 
 % Lực tác động vào xe con
 F1 = zeros(1,r);
@@ -29,7 +29,7 @@ F1(1:r) = 10;
 
 % Lực tác động vào xe nâng
 F2 = zeros(1,r);
-F2(1:1000) = 10;
+F2(1:r/2)=10;
 
 %--------------------------------------------------------------------------
 for j = 3:(r - 1)
