@@ -11,13 +11,13 @@ L = 0.63; EI = 0.754; rho_A = 0.297;
 mw = 13.1; mk = 0.04; mh = 0.86; g = 9.81;
 
 % Thiết lập thông số không gian và thời gian
-n = 9; r = 20000;
-tmax = 30;
+n = 9; r = 10000;
+tmax = 15;
 delta_Y = L/(n - 1); % Bước không gian
 delta_t = tmax/(r - 1); % Bước thời gian
 
 % Bộ thông số PID
-kp1 = 0.1; ki1 = 3; kd1 = 9; % Hệ số 3 khâu PID cho xe con
+kp1 = 3; kd1 = 9; % Hệ số 3 khâu PID cho xe con
 I = 0; % Khởi tạo giá trị tính tích phân
 sp1 = 1; % Giá trị đặt cho xe con
 e1 = zeros(1,r); % Sai số vị trí xe con
@@ -52,6 +52,11 @@ for j = 3:(r - 1)
     I = I + e1(j + 1)*delta_t;
     D = (e1(j + 1) - e1(j))/delta_t;
     F1(j + 2) = kp1*e1(j + 1) + kd1*D;
+    if F1(j + 2) > 15
+        F1(j + 2) = 15;
+    elseif F1(j + 2) < -15
+        F1(j + 2) = -15;
+    end
 end
 %--------------------------------------------------------------------------
 
