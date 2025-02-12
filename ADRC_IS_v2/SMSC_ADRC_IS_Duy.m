@@ -1,6 +1,10 @@
 clc;
 close all;
 clear;
+
+flag = 0; % Cờ để thay đổi giữa ADRC và ADRC + IS
+flag_is = 0; % Cờ để thay đổi giữa các bộ IS
+
 %--------------------------------------------------------------------------
 %                         Cài đặt các thông số
 %--------------------------------------------------------------------------
@@ -62,6 +66,16 @@ xl = zeros(3,r);
 
 x1_set = 1; % Giá trị đặt xe con
 x2_set = 0.4; % Giá trị đặt xe nâng
+%--------------------------------------------------------------------------
+%                       Thông số bộ tạo dạng tín hiệu
+%--------------------------------------------------------------------------
+f = 6.13415; % Tần số dao động riêng của hệ
+
+% Xung đơn vị
+us = unit_step(1:r);
+
+zeta = 0.01; K = exp((zeta*pi)/sqrt(1 - zeta^2)); 
+mopt = 0.99; % Giá trị tối ưu cho bộ ETM
 
 %--------------------------------------------------------------------------
 %    Mô phỏng chuyển động của dầm Euler - Bernoulli trong mô hình SMC
@@ -80,7 +94,8 @@ for j = 3:(r - 1)
         % Chuyển động của xe nâng
         dx3dt_2 = (x3(j) - 2*x3(j - 1) + x3(j - 2))/(2*delta_t^2);
         wyx2 = (w(x2 + 1,j - 1) - w(x2 - 1,j - 1))/(2*delta_Y^2);
-        dx2dt_2(j + 1) = 2*dx2dt_2(j) - dx2dt_2(j - 1) + ((F2(j + 1) - mh*g - mh*dx3dt_2*wyx2)*delta_t^2)/mh; % 5c
+        dx2dt_2(j + 1) = 2*dx2dt_2(j) - dx2dt_2(j - 1) + ((F2(j + 1) - mh*g ...
+                         - mh*dx3dt_2*wyx2)*delta_t^2)/mh; % 5c
 
         % Cập nhật vị trí x2
         if dx2dt_2(j + 1) < delta_Y
@@ -110,13 +125,27 @@ for j = 3:(r - 1)
 %--------------------------------------------------------------------------
 %                 Bộ điều khiển ADRC cho xe con và xe nâng
 %--------------------------------------------------------------------------
-    % Xe con    
-    xd(:,j + 2) = A_ESO*xd(:,j + 1) + B_ESO*F1(j + 1) + Lc*w(1,j + 1);
-    F1(j + 2) = (Kp*(x1_set - xd(1,j + 2)) - Kd*xd(2,j + 2) - xd(3,j + 2))/b01;
+    if flag == 1
+        % Xe con    
+        xd(:,j + 2) = A_ESO*xd(:,j + 1) + B_ESO*F1(j + 1) + Lc*w(1,j + 1);
+        F1(j + 2) = (Kp*(x1_set - xd(1,j + 2)) - Kd*xd(2,j + 2) - xd(3,j + 2))/b01;
+    
+        % Xe nâng
+        xl(:,j + 2) = A_ESO*xl(:,j + 1) + B_ESO*(F2(j + 1) - mh*g) + Lc*dx2dt_2(j + 1);
+        F2(j + 2) = (Kp*(x2_set - xl(1,j + 2)) - Kd*xl(2,j + 2) - xl(3,j + 2))/b02 + mh*g;
+    end
+%--------------------------------------------------------------------------
+%                         Bộ tạo dạng tín hiệu IS
+%--------------------------------------------------------------------------
+    if flag == 2
+        if flag_is == 1 % Bộ tạo dạng tín hiệu ZV
+        
+        elseif flag_is == 2 % Bộ tạo dạng tín hiệu ZVD
 
-    % Xe nâng
-    xl(:,j + 2) = A_ESO*xl(:,j + 1) + B_ESO*(F2(j + 1) - mh*g) + Lc*dx2dt_2(j + 1);
-    F2(j + 2) = (Kp*(x2_set - xl(1,j + 2)) - Kd*xl(2,j + 2) - xl(3,j + 2))/b02 + mh*g;
+        elseif flag_is == 3 % Bộ tạo dạng tín hiệu ETM4
+        end
+    end
+    
 end
 %--------------------------------------------------------------------------
 
@@ -136,7 +165,8 @@ xlabel('Thời gian (s)','FontSize',12);
 subplot(2,2,2);
 grid on;
 hold on;
-plot(t_tr,w(n,:) - w(1,:),'b','LineWidth',1.5); % Vị trí tương đối của mk so với xe con
+% Vị trí tương đối của mk so với xe con
+plot(t_tr,w(n,:) - w(1,:),'b','LineWidth',1.5);
 title({'Độ lắc đỉnh thanh'});
 ylabel('Biên độ dao động (m)','FontSize',12);
 xlabel('Thời gian (s)','FontSize',12);
