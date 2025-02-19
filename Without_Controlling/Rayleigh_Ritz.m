@@ -1,5 +1,5 @@
 % clc;
-clear all;
+clear;
 
 n=7;
 
@@ -17,4 +17,4 @@ end
 K = K/2 * EI;
 M = M/2 * pA + mk;
 lambda = double(subs(eig(inv(M)*K), [L EI pA mk mh H], [0.63 0.754 0.29655 0.04 0.86 0.2]));
-freqs = sqrt(lambda)/(2*pi)
+freqs = sqrt(lambda)/(2*pi);

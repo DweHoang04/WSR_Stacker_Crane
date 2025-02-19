@@ -5,12 +5,12 @@ L=0.7;mw=13.1;mh=0.86;mk=0.04;m=14.15;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Chọn n,r, thời gian mô phỏng
 tmax=15;
-n=9;r=15000;
+n=9;r=14000;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Chọn bộ điều khiển + SP 
 % sp1=1;sp2=0.2;
 sp1=1;sp2=0.3;
-flag =1;
+flag = 2;
 w_change=0;
 l_change=0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -259,37 +259,6 @@ if flag == 6
         p1(j+2)=(g1*dz*v1(j+2)*a-p1(j+1))*dt+p1(j+1);
         Fc1(j+2)=p1(j+2)*v1(j+2);
         F1(j+2)=c1*Fc1(j+2);
-   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 end
 end
 end
@@ -338,7 +307,33 @@ check=dolac-w3;
 plot(x,F2(1:r),LineWidth=1);
 title('F2');
 grid on
- % figure(3)
+
+n1 = 3; r1 = 1000;
+w = zeros(n,r);
+rn1 = n/n1; rr1 = r/r1;
+% for i=1:n1
+%     for j=1:r1
+%         wg(i,j) = w(rn1*i-(rn1-1), rr1*j-(rr1-1));
+%     end
+% end
+xc = (w-w(1,:))*1000;
+xc1 = xc';
+
+figure('Position', [700 100 600 300]);
+set(gca, 'FontName', 'Times New Roman', 'FontSize', 9);
+[X, Y] = meshgrid(0:(tmax/(r-1)):tmax,0:(l/(n-1)):l);
+meshc(Y,X,xc);
+% ylabel('t(s)');
+% xlabel('Y(m)');
+% zlabel('ω(Y,t)(mm)');
+
+ylabel('$t$(s)', 'Interpreter', 'latex', 'FontSize',9);
+xlabel('$Y$(m)', 'Interpreter', 'latex', 'FontSize',9);
+zlabel('$\omega(Y,t)$(mm)', 'Interpreter', 'latex', 'FontSize',9);
+view(65,10);
+axis([0 0.6 0 10 -40 40])
+
+% figure(3)
  
 % hold on
 % grid on
