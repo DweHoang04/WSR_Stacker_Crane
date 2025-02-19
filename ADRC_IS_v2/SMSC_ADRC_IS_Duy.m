@@ -2,8 +2,12 @@ clc;
 close all;
 clear;
 
-flag = 0; % Cờ để thay đổi giữa ADRC và ADRC + IS
-flag_is = 0; % Cờ để thay đổi giữa các bộ IS
+% Cờ để thay đổi giữa ADRC và ADRC + IS
+% flag = 1: ADRC; flag = 2: ADRC + IS
+flag = 1; 
+% Cờ để thay đổi giữa các bộ IS
+% flag_is = 1: ZV; flag_is = 2: ZVD; flag = 3: ETM4
+flag_is = 1;
 
 %--------------------------------------------------------------------------
 %                         Cài đặt các thông số
@@ -11,34 +15,34 @@ flag_is = 0; % Cờ để thay đổi giữa các bộ IS
 
 % Thiết lập các thông số cho dầm
 L = 0.63; EI = 0.754; rho_A = 0.297;
-% Các vật nặng 
+% Các vật nặng
 mw = 13.1; mk = 0.04; mh = 0.86; g = 9.81;
 
 % Thiết lập thông số không gian và thời gian
-n = 9; r = 20000;
-tmax = 20;
+n = 9; r = 10000;
+tmax = 15;
 delta_Y = L/(n - 1); % Bước không gian
 delta_t = tmax/(r - 1); % Bước thời gian
 
 % Khởi tạo ma trận để lưu giá trị
 w = zeros(n,r);
 x3 = zeros(1,r); % Độ lắc của thanh tại x2 (x3)
-x2 = 2; 
+x2 = 2;
 dx2dt_2 = zeros(1,r);
 dx2dt_2(1:3) = delta_Y;
 
 % Lực tác động vào xe con
 F1 = zeros(1,r);
 F1(1:r) = 10;
-
+    
 % Lực tác động vào xe nâng
 F2 = zeros(1,r);
-F2(1:r) = 3;
+F2(1:r) = mh*g - 0.1;
 
 %--------------------------------------------------------------------------
 %                        Thông số bộ điều khiển ADRC
 %--------------------------------------------------------------------------
-T_set = 6; % Thời gian xác lập (s)
+T_set = 2; % Thời gian xác lập (s)
 T_sample = 0.001; % Chu kỳ trích mẫu
 s_CL = -6/T_set; % Điểm cực hàm truyền hệ kín
 % Hệ số tỉ lệ
@@ -71,11 +75,11 @@ x2_set = 0.4; % Giá trị đặt xe nâng
 %--------------------------------------------------------------------------
 f = 6.13415; % Tần số dao động riêng của hệ
 
-% Xung đơn vị
-us = unit_step(1:r);
-
 zeta = 0.01; K = exp((zeta*pi)/sqrt(1 - zeta^2)); 
 mopt = 0.99; % Giá trị tối ưu cho bộ ETM
+
+% Các thời điểm của các vector xung
+t2 = 1/(2*f); t3 = 1/f;
 
 %--------------------------------------------------------------------------
 %    Mô phỏng chuyển động của dầm Euler - Bernoulli trong mô hình SMC
@@ -135,17 +139,39 @@ for j = 3:(r - 1)
         F2(j + 2) = (Kp*(x2_set - xl(1,j + 2)) - Kd*xl(2,j + 2) - xl(3,j + 2))/b02 + mh*g;
     end
 %--------------------------------------------------------------------------
-%                         Bộ tạo dạng tín hiệu IS
+%                      Bộ tạo dạng tín hiệu IS + ADRC
 %--------------------------------------------------------------------------
     if flag == 2
-        if flag_is == 1 % Bộ tạo dạng tín hiệu ZV
-        
-        elseif flag_is == 2 % Bộ tạo dạng tín hiệu ZVD
-
-        elseif flag_is == 3 % Bộ tạo dạng tín hiệu ETM4
+        % IS
+        if flag_is == 1 
+            % Bộ tạo dạng tín hiệu ZV
+            A1 = K/(1 + K); A2 = A1;
+            x1_set_is = x1_set*(A1*unit_step(j*delta_t) + A2*unit_step(j*delta_t - t2));
+        elseif flag_is == 2 
+            % Bộ tạo dạng tín hiệu ZVD
+            A1 = (K/(1 + K))^2; 
+            A2 = (2*K)/(1 + K)^2;
+            A3 = 1/(1 + K)^2;
+            x1_set_is = x1_set*(A1*unit_step(j*delta_t) + A2*unit_step(j*delta_t - t2) ...
+                        + A3*unit_step(j*delta_t - t3));
+        elseif flag_is == 3 
+            % Bộ tạo dạng tín hiệu ETM4
+            t2 = 1/(3*f); t3 = 2/(3*f); t4 = 1/f;
+            I = (K^2*(1 + mopt))/(K^2 + (1 + mopt)*(K^(4/3) + K^(2/3)) + mopt);
+            A1 = I/(1 + mopt); A2 = I/K^(2/3);
+            A3 = I/K^(4/3); A4 = (mopt*I)/(K^2*(1 + mopt));
+            x1_set_is = x1_set*(A1*unit_step(j*delta_t) + A2*unit_step(j*delta_t - t2) ...
+                        + A3*unit_step(j*delta_t - t3)) + A4*unit_step(j*delta_t - t4);
         end
+        % ADRC
+        % Xe con
+        xd(:,j + 2) = A_ESO*xd(:,j + 1) + B_ESO*F1(j + 1) + Lc*w(1,j + 1);
+        F1(j + 2) = (Kp*(x1_set_is - xd(1,j + 2)) - Kd*xd(2,j + 2) - xd(3,j + 2))/b01;
+        
+        % Xe nâng
+        xl(:,j + 2) = A_ESO*xl(:,j + 1) + B_ESO*(F2(j + 1) - mh*g) + Lc*dx2dt_2(j + 1);
+        F2(j + 2) = (Kp*(x2_set - xl(1,j + 2)) - Kd*xl(2,j + 2) - xl(3,j + 2))/b02 + mh*g;
     end
-    
 end
 %--------------------------------------------------------------------------
 
