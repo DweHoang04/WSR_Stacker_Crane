@@ -19,7 +19,7 @@ L = 0.63; EI = 0.754; rho_A = 0.297;
 mw = 13.1; mk = 0.04; mh = 0.86; g = 9.81;
 
 % Thiết lập thông số không gian và thời gian
-n = 9; r = 10000;
+n = 9; r = 15000;
 tmax = 15;
 delta_Y = L/(n - 1); % Bước không gian
 delta_t = tmax/(r - 1); % Bước thời gian
@@ -28,7 +28,7 @@ delta_t = tmax/(r - 1); % Bước thời gian
 w = zeros(n,r);
 x3 = zeros(1,r); % Độ lắc của thanh tại x2 (x3)
 x2 = 2;
-dx2dt_2 = zeros(1,r);
+wx2 = zeros(1,r);
 dx2dt_2(1:3) = delta_Y;
 
 % Lực tác động vào xe con
@@ -37,7 +37,7 @@ F1(1:r) = 10;
     
 % Lực tác động vào xe nâng
 F2 = zeros(1,r);
-F2(1:r) = mh*g - 0.1;
+F2(1:r) = 1;
 
 %--------------------------------------------------------------------------
 %                        Thông số bộ điều khiển ADRC
@@ -90,30 +90,29 @@ for j = 3:(r - 1)
     w(1,j + 1) = 2*w(1,j) - w(1,j - 1) + delta_t^2*S2; % 5b
     for i = 3:(n - 2)
         % Đạo hàm theo Y
-        wyyyy = w(i + 2,j) - 4*w(i + 1,j) + 6*w(i,j) - 4*w(i - 1,j) + w(i - 2,j);
-        S1 = (-EI/(rho_A*delta_Y^4))*wyyyy;
+        wyyyy = (w(i + 2,j) - 4*w(i + 1,j) + 6*w(i,j) - 4*w(i - 1,j) + w(i - 2,j));
+        S1 = (-EI/(rho_A*delta_Y^4))*wyyyy; 
         S4 = (-EI/(mh*delta_Y^3))*wyyyy;
         w(i,j + 1) = 2*w(i,j) - w(i,j - 1) + delta_t^2*S1; % 5a
 
         % Chuyển động của xe nâng
-        dx3dt_2 = (x3(j) - 2*x3(j - 1) + x3(j - 2))/(2*delta_t^2);
+        dx3dt_2 = (x3(j + 1) - 2*x3(j) + x3(j - 1))/(2*delta_t^2);
         wyx2 = (w(x2 + 1,j - 1) - w(x2 - 1,j - 1))/(2*delta_Y^2);
-        dx2dt_2(j + 1) = 2*dx2dt_2(j) - dx2dt_2(j - 1) + ((F2(j + 1) - mh*g ...
-                         - mh*dx3dt_2*wyx2)*delta_t^2)/mh; % 5c
+        wx2(j + 1) = 2*wx2(j) - wx2(j - 1) + (F2(j + 1) - mh*g - mh*dx3dt_2*wyx2)/mh*delta_t^2; % 5c
 
         % Cập nhật vị trí x2
-        if dx2dt_2(j + 1) < delta_Y
+        if wx2(j + 1) < delta_Y
             x2 = 2;
-            dx2dt_2(j + 1) = delta_Y;
-        elseif dx2dt_2(j + 1) > L - delta_Y
+            wx2(j + 1) = delta_Y;
+        elseif wx2(j + 1) > L - delta_Y
             x2 = n - 1;
-            dx2dt_2(j + 1) = L - delta_Y;
+            wx2(j + 1) = L - delta_Y;
         else
-            x2 = ceil(dx2dt_2(j + 1)/delta_Y);
+            x2 = ceil(wx2(j + 1)/delta_Y);
         end
 
         % Độ lắc của thanh
-        if dx2dt_2(j + 1) ~= x2
+        if wx2(j + 1) ~= x2
             w(i,j + 1) = 2*w(i,j) - w(i,j - 1) + delta_t^2*S1; % 5a
             x3(j + 1) = w(i,j + 1) - w(1,j + 1);
         else
@@ -132,11 +131,14 @@ for j = 3:(r - 1)
     if flag == 1
         % Xe con    
         xd(:,j + 2) = A_ESO*xd(:,j + 1) + B_ESO*F1(j + 1) + Lc*w(1,j + 1);
-        F1(j + 2) = (Kp*(x1_set - xd(1,j + 2)) - Kd*xd(2,j + 2) - xd(3,j + 2))/b01;
+        F1(j + 2) = (Kp*(x1_set - xd(1,j + 2)) ...
+                    - Kd*xd(2,j + 2) - xd(3,j + 2))/b01;
     
         % Xe nâng
-        xl(:,j + 2) = A_ESO*xl(:,j + 1) + B_ESO*(F2(j + 1) - mh*g) + Lc*dx2dt_2(j + 1);
-        F2(j + 2) = (Kp*(x2_set - xl(1,j + 2)) - Kd*xl(2,j + 2) - xl(3,j + 2))/b02 + mh*g;
+        xl(:,j + 2) = A_ESO*xl(:,j + 1) + B_ESO*(F2(j + 1) - mh*g) ...
+                      + Lc*wx2(j + 1);
+        F2(j + 2) = (Kp*(x2_set - xl(1,j + 2)) - Kd*xl(2,j + 2) ...
+                    - xl(3,j + 2))/b02 + mh*g;
     end
 %--------------------------------------------------------------------------
 %                      Bộ tạo dạng tín hiệu IS + ADRC
@@ -146,7 +148,8 @@ for j = 3:(r - 1)
         if flag_is == 1 
             % Bộ tạo dạng tín hiệu ZV
             A1 = K/(1 + K); A2 = A1;
-            x1_set_is = x1_set*(A1*unit_step(j*delta_t) + A2*unit_step(j*delta_t - t2));
+            x1_set_is = x1_set*(A1*unit_step(j*delta_t) ...
+                        + A2*unit_step(j*delta_t - t2));
         elseif flag_is == 2 
             % Bộ tạo dạng tín hiệu ZVD
             A1 = (K/(1 + K))^2; 
@@ -169,7 +172,7 @@ for j = 3:(r - 1)
         F1(j + 2) = (Kp*(x1_set_is - xd(1,j + 2)) - Kd*xd(2,j + 2) - xd(3,j + 2))/b01;
         
         % Xe nâng
-        xl(:,j + 2) = A_ESO*xl(:,j + 1) + B_ESO*(F2(j + 1) - mh*g) + Lc*dx2dt_2(j + 1);
+        xl(:,j + 2) = A_ESO*xl(:,j + 1) + B_ESO*(F2(j + 1) - mh*g) + Lc*wx2(j + 1);
         F2(j + 2) = (Kp*(x2_set - xl(1,j + 2)) - Kd*xl(2,j + 2) - xl(3,j + 2))/b02 + mh*g;
     end
 end
@@ -200,7 +203,7 @@ xlabel('Thời gian (s)','FontSize',12);
 subplot(2,2,3);
 grid on;
 hold on;
-plot(t_tr,dx2dt_2,'r','LineWidth',1.5);
+plot(t_tr,wx2,'r','LineWidth',1.5);
 title({'Vị trí xe nâng'});
 ylabel('Vị trí xe nâng (m)','FontSize',12);
 xlabel('Thời gian (s)','FontSize',12);

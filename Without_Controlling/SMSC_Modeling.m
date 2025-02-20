@@ -20,8 +20,8 @@ delta_t = tmax/(r - 1); % Bước thời gian
 w = zeros(n,r);
 x3 = zeros(1,r); % Độ lắc của thanh tại x2 (x3)
 x2 = 2; 
-dx2dt_2 = zeros(1,r);
-dx2dt_2(1:3) = delta_Y;
+wx2 = zeros(1,r);
+% wx2(1:3) = delta_Y;
 
 % Lực tác động vào xe con
 F1 = zeros(1,r);
@@ -46,21 +46,21 @@ for j = 3:(r - 1)
         % Chuyển động của xe nâng
         dx3dt_2 = (x3(j + 1) - 2*x3(j) + x3(j - 1))/(2*delta_t^2);
         wyx2 = (w(x2 + 1,j - 1) - w(x2 - 1,j - 1))/(2*delta_Y^2);
-        dx2dt_2(j + 1) = 2*dx2dt_2(j) - dx2dt_2(j - 1) + (F2(j + 1) - mh*g - mh*dx3dt_2*wyx2)/mh*delta_t^2; % 5c
+        wx2(j + 1) = 2*wx2(j) - wx2(j - 1) + (F2(j + 1) - mh*g - mh*dx3dt_2*wyx2)/mh*delta_t^2; % 5c
 
         % Cập nhật vị trí x2
-        if dx2dt_2(j + 1) < delta_Y
+        if wx2(j + 1) < delta_Y
             x2 = 2;
-            dx2dt_2(j + 1) = delta_Y;
-        elseif dx2dt_2(j + 1) > L - delta_Y
+            wx2(j + 1) = 0;
+        elseif wx2(j + 1) > L - delta_Y
             x2 = n - 1;
-            dx2dt_2(j + 1) = L - delta_Y;
+            wx2(j + 1) = L - delta_Y;
         else
-            x2 = ceil(dx2dt_2(j + 1)/delta_Y);
+            x2 = ceil(wx2(j + 1)/delta_Y);
         end
 
         % Độ lắc của thanh
-        if dx2dt_2(j + 1) ~= x2
+        if wx2(j + 1) ~= x2
             w(i,j + 1) = 2*w(i,j) - w(i,j - 1) + delta_t^2*S1; % 5a
             x3(j + 1) = w(i,j + 1) - w(1,j + 1);
         else
@@ -99,7 +99,7 @@ xlabel('Thời gian (s)','FontSize',12);
 subplot(2,2,3);
 grid on;
 hold on;
-plot(t_tr,dx2dt_2,'r','LineWidth',1.5);
+plot(t_tr,wx2,'r','LineWidth',1.5);
 title({'Vị trí xe nâng'});
 ylabel('Vị trí xe nâng (m)','FontSize',12);
 xlabel('Thời gian (s)','FontSize',12);
