@@ -1,7 +1,7 @@
-clc;clear;close all
+clc; clear; close all;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-pA=0.297;EI=0.754;g=9.81;
-L=0.7;mw=13.1;mh=0.86;mk=0.04;m=14.15;
+pA=0.297; EI=0.754; g=9.81;
+mw=13.1; mh=0.86; L = 0.63;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Chọn n,r, thời gian mô phỏng
 tmax=15;
@@ -10,7 +10,7 @@ n=9;r=14000;
 % Chọn bộ điều khiển + SP 
 % sp1=1;sp2=0.2;
 sp1=1;sp2=0.3;
-flag = 2;
+flag = 1;
 w_change=0;
 l_change=0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -39,7 +39,7 @@ w=zeros(n,r);
 
 mk=zeros(1,r);mk(:)=0.04;
 
-L=zeros(1,r);L(:)=0.7;
+L=zeros(1,r);L(:)=0.63;
 
 z1=zeros(1,r);
 ds=zeros(1,r);ds(:)=0.7/(n-1);
@@ -109,9 +109,8 @@ end
 % flag = 1 = robust -PD
 % flag = 2 = barrier
 if flag == 0
-F1(1:r/2)=10;
-F1(r/2:r)=0;
-F2(1:r/2)=10;
+F1(1:r) = 10;
+F2(1:r) = 9;
 check2= zeros(1,r);
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                              
@@ -262,6 +261,12 @@ if flag == 6
 end
 end
 end
+
+set(0, 'DefaultAxesFontName', 'Times New Roman'); % Phông chữ cho trục
+set(0, 'DefaultTextFontName', 'Times New Roman'); % Phông chữ cho văn bản
+set(0, 'DefaultAxesFontSize', 10); % Kích thước chữ cho trục
+set(0, 'DefaultTextFontSize', 10); % Kích thước chữ cho văn bản
+
 x=0:dt:tmax;
 y=0:ds:L;
 figure(1)
@@ -307,31 +312,6 @@ check=dolac-w3;
 plot(x,F2(1:r),LineWidth=1);
 title('F2');
 grid on
-
-n1 = 3; r1 = 1000;
-w = zeros(n,r);
-rn1 = n/n1; rr1 = r/r1;
-% for i=1:n1
-%     for j=1:r1
-%         wg(i,j) = w(rn1*i-(rn1-1), rr1*j-(rr1-1));
-%     end
-% end
-xc = (w-w(1,:))*1000;
-xc1 = xc';
-
-figure('Position', [700 100 600 300]);
-set(gca, 'FontName', 'Times New Roman', 'FontSize', 9);
-[X, Y] = meshgrid(0:(tmax/(r-1)):tmax,0:(l/(n-1)):l);
-meshc(Y,X,xc);
-% ylabel('t(s)');
-% xlabel('Y(m)');
-% zlabel('ω(Y,t)(mm)');
-
-ylabel('$t$(s)', 'Interpreter', 'latex', 'FontSize',9);
-xlabel('$Y$(m)', 'Interpreter', 'latex', 'FontSize',9);
-zlabel('$\omega(Y,t)$(mm)', 'Interpreter', 'latex', 'FontSize',9);
-view(65,10);
-axis([0 0.6 0 10 -40 40])
 
 % figure(3)
  

@@ -21,15 +21,15 @@ w = zeros(n,r);
 x3 = zeros(1,r); % Độ lắc của thanh tại x2 (x3)
 x2 = 2; 
 wx2 = zeros(1,r);
-% wx2(1:3) = delta_Y;
+wx2(1:3) = delta_Y;
 
 % Lực tác động vào xe con
 F1 = zeros(1,r);
-F1(1:r) = 10; 
+F1(1:r) = 1; 
 
 % Lực tác động vào xe nâng
 F2 = zeros(1,r);
-F2(1:r) = 0;
+F2(1:r/4) = 9; F2(r/2:3*r/4) = 9;
 
 %--------------------------------------------------------------------------
 for j = 3:(r - 1)
@@ -51,7 +51,7 @@ for j = 3:(r - 1)
         % Cập nhật vị trí x2
         if wx2(j + 1) < delta_Y
             x2 = 2;
-            wx2(j + 1) = 0;
+            wx2(j + 1) = delta_Y;
         elseif wx2(j + 1) > L - delta_Y
             x2 = n - 1;
             wx2(j + 1) = L - delta_Y;

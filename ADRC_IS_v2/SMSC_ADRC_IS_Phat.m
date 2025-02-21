@@ -8,7 +8,7 @@ n=9;r=15000;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Chọn bộ điều khiển + SP 
 sp1=1;sp2=0.5;
-flag =4;
+flag =5;
 IS =1;
 w_change=0;
 l_change=0 ;

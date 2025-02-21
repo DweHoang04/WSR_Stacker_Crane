@@ -22,16 +22,22 @@ delta_Y = L/(n - 1); % Bước không gian
 delta_t = tmax/(r - 1); % Bước thời gian
 
 %--------------------------------------------------------------------------
-%                   Thông số bộ điều khiển PD + Robust
+%           Thông số bộ điều khiển PD + Robust (Điều khiển vị trí)
 %--------------------------------------------------------------------------
-k1 = 10; kx = 20; kn = 1.5;
-x1_set = 1; % Giá trị đặt xe con
-x2_set = 0.3; % Giá trị đặt xe nâng
+% Xe con
+alpha_1R = 15; gamma = 25; 
+
+% Xe nâng
+kn = 1.5;
 %--------------------------------------------------------------------------
-%                     Thông số bộ điều khiển Barrier
+%          Thông số bộ điều khiển Barrier (Điều khiển chống rung)
 %--------------------------------------------------------------------------
-k1_barrier = 20; kmax = 0.4; k2 = 0.01; k3 = 30; 
-k0 = 10; kc = 0.001; kn_barrier = 1.5;
+% Xe con
+alpha_1B = 15; kmax = 0.4; alpha_3 = 0.01; k3 = 30; 
+k0 = 10; kc = 0.001; 
+
+% Xe nâng
+kn_barrier = 1.5;
 %--------------------------------------------------------------------------
 
 % Khởi tạo ma trận để lưu giá trị
@@ -47,7 +53,10 @@ F1(1:r) = 10;
 
 % Lực tác động vào xe nâng
 F2 = zeros(1,r);
-F2(1:r) = 0;
+F2(1:r) = 1;
+
+x1_set = 1; % Giá trị đặt xe con
+x2_set = 0.3; % Giá trị đặt xe nâng
 
 %--------------------------------------------------------------------------
 for j = 3:(r - 1)
@@ -64,7 +73,8 @@ for j = 3:(r - 1)
         % Chuyển động của xe nâng
         dx3dt_2 = (x3(j + 1) - 2*x3(j) + x3(j - 1))/(2*delta_t^2);
         wyx2 = (w(x2 + 1,j - 1) - w(x2 - 1,j - 1))/(2*delta_Y^2);
-        dx2dt_2(j + 1) = 2*dx2dt_2(j) - dx2dt_2(j - 1) + (F2(j + 1) - mh*g - mh*dx3dt_2*wyx2)/mh*delta_t^2; % 5c
+        dx2dt_2(j + 1) = 2*dx2dt_2(j) - dx2dt_2(j - 1) + (F2(j + 1) ...
+                         - mh*g - mh*dx3dt_2*wyx2)/mh*delta_t^2; % 5c
 
         % Cập nhật vị trí x2
         if dx2dt_2(j + 1) < delta_Y
@@ -95,35 +105,32 @@ for j = 3:(r - 1)
 %                        Bộ điều khiển PD + Robust
 %--------------------------------------------------------------------------
     if flag == 1
-        % e(j + 1) = (w(1,j + 1) - w(1,j));
-        % de = (e(j + 1) - e(j))/delta_Y;
-        dx1 = (w(1,j + 1) - w(1,j))/delta_t;
-        F1(j + 2) = -k1*(w(1,j + 1) - x1_set) - kx*dx1;
-        % if F1(j + 2)>50
-        %     F1(j + 2) = 50;
-        % end
-        % if F1(j + 2) < -5
-        %     F1(j + 2) = -50;
-        % end
-        S2 = (w(x2 + 1,j + 1) - 2*w(x2,j + 1) + w(x2 - 1,j + 1))/(delta_Y^3);
-        dx2 = (w(x2 + 1,j + 1) - w(x2 - 1,j + 1))/2*delta_Y;
-        dtx2 = (dx2dt_2(j + 1) - dx2dt_2(j))/delta_t;
-        F2(j + 2) = mh*g + EI*S2*dx2 - (dx2dt_2(j + 1) - x2_set) - kn*dtx2;
+        % Xe con
+        wy0 = (w(1,j + 1) - w(1,j - 1))/(2*delta_t);
+        F1(j + 2) = -alpha_1R*(w(1,j + 1) - x1_set) - gamma*wy0;
+
+        % Xe nâng
+        wyx2 = (w(x2 + 1,j + 1) - w(x2,j + 1))/delta_Y;
+        dx2dt = (dx2dt_2(j + 1) - dx2dt_2(j - 1))/delta_t;
+        F2(j + 2) = mh*g + mh*dx3dt_2*wyx2 - (dx2dt_2(j + 1) - x2_set) - dx2dt;
     end
 %--------------------------------------------------------------------------
 %                       Bộ điều khiển PD + Barrier
 %--------------------------------------------------------------------------
     if flag == 2
-        z = w(x2,j + 1);
-        dwl = (w(1,j + 1) - w(1,j))/delta_t;
-        S1 = kc/((kmax^2 - z^2)*2.3) + k2;
-        F1(j + 2) = -k1_barrier*(w(1,j + 1) - x1_set) - k3*dwl ...
-                    - S1*kmax*k0*dwl - S1*kmax;
+        % Xe con
+        z = w(n,j + 1) - w(1,j + 1);
+        if abs(z) < kmax
+            wy0 = (w(1,j + 1) - w(1,j - 1))/(2*delta_t);
+            coef = kc/(kmax^2 - z^2)*log(10);
+            F1(j + 2) = -alpha_1B*(w(1,j + 1) - x1_set) - gamma*wy0 ...
+                        - coef*kmax*k0*wy0 - coef*kmax;
+        end
         
-        S2 = (w(x2 + 1,j + 1) - 2*w(x2,j + 1) + w(x2 - 1,j + 1))/(delta_Y^3);
-        dx2 = (w(x2 + 1,j + 1) - w(x2 - 1,j + 1))/2*delta_Y;
-        dtx2 = (dx2dt_2(j + 1) - dx2dt_2(j))/delta_t;
-        F2(j + 2) = mh*g + EI*S2*dx2 - (dx2dt_2(j+1) - x2_set) - kn*dtx2;
+        % Xe nâng
+        wyx2 = (w(x2 + 1,j + 1) - w(x2,j + 1))/delta_Y;
+        dx2dt = (dx2dt_2(j + 1) - dx2dt_2(j - 1))/delta_t;
+        F2(j + 2) = mh*g + mh*dx3dt_2*wyx2 - (dx2dt_2(j + 1) - x2_set) - dx2dt;
     end
 end
 %--------------------------------------------------------------------------
