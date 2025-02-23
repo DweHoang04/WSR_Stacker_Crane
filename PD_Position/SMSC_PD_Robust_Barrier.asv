@@ -4,7 +4,7 @@ clear;
 
 % Cờ để thay đổi giữa các bộ điều khiển
 % flag = 0: Không điều khiển; flag = 1: PD + Robust; flag = 2: Barrier
-flag = 1;
+flag = 2;
 
 %--------------------------------------------------------------------------
 %    Mô phỏng chuyển động của dầm Euler - Bernoulli trong mô hình SMC
@@ -16,7 +16,7 @@ L = 0.63; EI = 0.754; rho_A = 0.297;
 mw = 13.1; mk = 0.04; mh = 0.86; g = 9.81;
 
 % Thiết lập thông số không gian và thời gian
-n = 10; r = 20000;
+n = 9; r = 14000;
 tmax = 15;
 delta_Y = L/(n - 1); % Bước không gian
 delta_t = tmax/(r - 1); % Bước thời gian
@@ -32,8 +32,12 @@ kn = 1.5;
 %--------------------------------------------------------------------------
 %          Thông số bộ điều khiển Barrier (Điều khiển chống rung)
 %--------------------------------------------------------------------------
-alpha_1B = 20; kmax = 0.4; alpha_3 = 0.01; k3 = 30; 
-k0 = 10; kc = 0.001; kn_barrier = 1.5;
+% Xe con
+alpha_1B = 15; kmax = 0.4; alpha_3 = 0.01; k3 = 30; 
+k0 = 10; kc = 0.001; 
+
+% Xe nâng
+kn_barrier = 1.5;
 %--------------------------------------------------------------------------
 
 % Khởi tạo ma trận để lưu giá trị
@@ -64,10 +68,9 @@ for j = 3:(r - 1)
         wyyyy = (w(i + 2,j) - 4*w(i + 1,j) + 6*w(i,j) - 4*w(i - 1,j) + w(i - 2,j));
         S1 = (-EI/(rho_A*delta_Y^4))*wyyyy; 
         S4 = (-EI/(mh*delta_Y^3))*wyyyy;
-        w(i,j + 1) = 2*w(i,j) - w(i,j - 1) + delta_t^2*S1; % 5a
 
         % Chuyển động của xe nâng
-        dx3dt_2 = (x3(j + 1) - 2*x3(j) + x3(j - 1))/(2*delta_t^2);
+        dx3dt_2 = (x3(j) - 2*x3(j - 1) + x3(j - 2))/(2*delta_t^2);
         wyx2 = (w(x2 + 1,j - 1) - w(x2 - 1,j - 1))/(2*delta_Y^2);
         dx2dt_2(j + 1) = 2*dx2dt_2(j) - dx2dt_2(j - 1) + (F2(j + 1) ...
                          - mh*g - mh*dx3dt_2*wyx2)/mh*delta_t^2; % 5c
@@ -84,11 +87,11 @@ for j = 3:(r - 1)
         end
 
         % Độ lắc của thanh
-        if dx2dt_2(j + 1) ~= x2
+        if i ~= x2 
             w(i,j + 1) = 2*w(i,j) - w(i,j - 1) + delta_t^2*S1; % 5a
             x3(j + 1) = w(i,j + 1) - w(1,j + 1);
         else
-            w(i,j + 1) = 2*w(i,j) - w(i,j - 1) + delta_t^2*S4; % 5d
+            w(i,j + 1) = 2*w(i,j) - w(i,j - 1) + delta_t^2*S4; % 5e
             x3(j + 1) = w(i,j + 1) - w(1,j + 1);
         end
     end
@@ -115,8 +118,13 @@ for j = 3:(r - 1)
 %--------------------------------------------------------------------------
     if flag == 2
         % Xe con
-        z = w(n,j + 1) - w(0,j + 1);
-        if z
+        z = w(n,j + 1) - w(1,j + 1);
+        if abs(z) < kmax
+            wy0 = (w(1,j + 1) - w(1,j - 1))/(2*delta_t);
+            coef = kc/(kmax^2 - z^2)*log(10);
+            F1(j + 2) = -alpha_1B*(w(1,j + 1) - x1_set) - gamma*wy0 ...
+                        - coef*kmax*k0*wy0 - coef*kmax;
+        end
         
         % Xe nâng
         wyx2 = (w(x2 + 1,j + 1) - w(x2,j + 1))/delta_Y;

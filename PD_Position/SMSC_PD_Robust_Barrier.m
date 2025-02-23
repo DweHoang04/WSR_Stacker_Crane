@@ -4,7 +4,7 @@ clear;
 
 % Cờ để thay đổi giữa các bộ điều khiển
 % flag = 0: Không điều khiển; flag = 1: PD + Robust; flag = 2: Barrier
-flag = 2;
+flag = 1;
 
 %--------------------------------------------------------------------------
 %    Mô phỏng chuyển động của dầm Euler - Bernoulli trong mô hình SMC
@@ -16,7 +16,7 @@ L = 0.63; EI = 0.754; rho_A = 0.297;
 mw = 13.1; mk = 0.04; mh = 0.86; g = 9.81;
 
 % Thiết lập thông số không gian và thời gian
-n = 10; r = 20000;
+n = 9; r = 415000;
 tmax = 15;
 delta_Y = L/(n - 1); % Bước không gian
 delta_t = tmax/(r - 1); % Bước thời gian
@@ -28,7 +28,7 @@ delta_t = tmax/(r - 1); % Bước thời gian
 alpha_1R = 15; gamma = 25; 
 
 % Xe nâng
-kn = 1.5;
+kn_R = 0.5;
 %--------------------------------------------------------------------------
 %          Thông số bộ điều khiển Barrier (Điều khiển chống rung)
 %--------------------------------------------------------------------------
@@ -37,7 +37,7 @@ alpha_1B = 15; kmax = 0.4; alpha_3 = 0.01; k3 = 30;
 k0 = 10; kc = 0.001; 
 
 % Xe nâng
-kn_barrier = 1.5;
+kn_B = 1;
 %--------------------------------------------------------------------------
 
 % Khởi tạo ma trận để lưu giá trị
@@ -53,7 +53,7 @@ F1(1:r) = 10;
 
 % Lực tác động vào xe nâng
 F2 = zeros(1,r);
-F2(1:r) = 1;
+F2(1:r) = 9;
 
 x1_set = 1; % Giá trị đặt xe con
 x2_set = 0.3; % Giá trị đặt xe nâng
@@ -68,10 +68,9 @@ for j = 3:(r - 1)
         wyyyy = (w(i + 2,j) - 4*w(i + 1,j) + 6*w(i,j) - 4*w(i - 1,j) + w(i - 2,j));
         S1 = (-EI/(rho_A*delta_Y^4))*wyyyy; 
         S4 = (-EI/(mh*delta_Y^3))*wyyyy;
-        w(i,j + 1) = 2*w(i,j) - w(i,j - 1) + delta_t^2*S1; % 5a
 
         % Chuyển động của xe nâng
-        dx3dt_2 = (x3(j + 1) - 2*x3(j) + x3(j - 1))/(2*delta_t^2);
+        dx3dt_2 = (x3(j) - 2*x3(j - 1) + x3(j - 2))/(2*delta_t^2);
         wyx2 = (w(x2 + 1,j - 1) - w(x2 - 1,j - 1))/(2*delta_Y^2);
         dx2dt_2(j + 1) = 2*dx2dt_2(j) - dx2dt_2(j - 1) + (F2(j + 1) ...
                          - mh*g - mh*dx3dt_2*wyx2)/mh*delta_t^2; % 5c
@@ -112,7 +111,7 @@ for j = 3:(r - 1)
         % Xe nâng
         wyx2 = (w(x2 + 1,j + 1) - w(x2,j + 1))/delta_Y;
         dx2dt = (dx2dt_2(j + 1) - dx2dt_2(j - 1))/delta_t;
-        F2(j + 2) = mh*g + mh*dx3dt_2*wyx2 - (dx2dt_2(j + 1) - x2_set) - dx2dt;
+        F2(j + 2) = mh*g + mh*dx3dt_2*wyx2 - (dx2dt_2(j + 1) - x2_set) - kn_R*dx2dt;
     end
 %--------------------------------------------------------------------------
 %                       Bộ điều khiển PD + Barrier
@@ -130,7 +129,7 @@ for j = 3:(r - 1)
         % Xe nâng
         wyx2 = (w(x2 + 1,j + 1) - w(x2,j + 1))/delta_Y;
         dx2dt = (dx2dt_2(j + 1) - dx2dt_2(j - 1))/delta_t;
-        F2(j + 2) = mh*g + mh*dx3dt_2*wyx2 - (dx2dt_2(j + 1) - x2_set) - dx2dt;
+        F2(j + 2) = mh*g + mh*dx3dt_2*wyx2 - (dx2dt_2(j + 1) - x2_set) - kn_B*dx2dt;
     end
 end
 %--------------------------------------------------------------------------
