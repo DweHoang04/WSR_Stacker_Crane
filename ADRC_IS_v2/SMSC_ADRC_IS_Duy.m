@@ -4,7 +4,7 @@ clear;
 
 % Cờ để thay đổi giữa ADRC và ADRC + IS
 % flag = 1: ADRC; flag = 2: ADRC + IS
-flag = 1; 
+flag = 2; 
 % Cờ để thay đổi giữa các bộ IS
 % flag_is = 1: ZV; flag_is = 2: ZVD; flag = 3: ETM4
 flag_is = 2;
