@@ -34,7 +34,9 @@ kn_R = 1;
 %--------------------------------------------------------------------------
 % Xe con
 alpha_1B = 15; kmax = 2*10^-3; alpha_3 = 0.01; k3 = 30; 
-k0 = 10; kc = 0.001;
+k0 = 10; kc = 0.001; 
+% Hàm của anh Cảnh
+alpha_4 = 0.1; alpha_0 = 0.1;
 
 % Xe nâng
 kn_B = 1;
@@ -149,6 +151,22 @@ for j = 3:(r - 1)
         else
             disp('CBF không duy trì điều kiện an toàn');
         end
+        
+        % Xe nâng
+        wyx2 = (w(x2 + 1,j + 1) - w(x2,j + 1))/delta_Y;
+        dx2dt = (dx2dt_2(j + 1) - dx2dt_2(j - 1))/delta_t;
+        F2(j + 2) = mh*g + mh*dx3dt_2*wyx2 - (dx2dt_2(j + 1) - x2_set) - kn_B*dx2dt;
+    end
+%--------------------------------------------------------------------------
+%                   Bộ điều khiển CBF + Hàm của anh Cảnh
+%--------------------------------------------------------------------------
+    if flag == 4
+        % Xe con
+        z = w(n,j + 1) - w(1,j + 1);
+        wy0 = (w(1,j + 1) - w(1,j - 1))/(2*delta_t);
+        coef = kc/(kmax^2 - z^2)*log(10);
+        F1(j + 2) = -alpha_1B*(w(1,j + 1) - x1_set) - gamma*wy0 - coef*kmax*k0*wy0 - coef*kmax ... 
+                - alpha_4*abs(w(n,j + 1) - w(0,j + 1))*alpha_0*wy0 + alpha_4*(w(n,j + 1) - w(0,j + 1));
         
         % Xe nâng
         wyx2 = (w(x2 + 1,j + 1) - w(x2,j + 1))/delta_Y;
