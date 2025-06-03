@@ -4,10 +4,10 @@ clear;
 
 % Cờ để thay đổi giữa ADRC và ADRC + IS
 % flag = 1: ADRC; flag = 2: ADRC + IS
-flag = 2; 
+flag = 1; 
 % Cờ để thay đổi giữa các bộ IS
 % flag_is = 1: ZV; flag_is = 2: ZVD; flag = 3: ETM4
-flag_is = 2;
+flag_is = 3;
 
 %--------------------------------------------------------------------------
 %                         Cài đặt các thông số
@@ -19,7 +19,7 @@ L = 0.63; EI = 0.754; rho_A = 0.297;
 mw = 13.1; mk = 0.04; mh = 0.86; g = 9.81;
 
 % Thiết lập thông số không gian và thời gian
-n = 9; r = 14000;
+n = 9; r = 15000;
 tmax = 15;
 delta_Y = L/(n - 1); % Bước không gian
 delta_t = tmax/(r - 1); % Bước thời gian

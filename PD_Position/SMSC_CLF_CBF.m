@@ -3,8 +3,9 @@ close all;
 clear;
 
 % Cờ để thay đổi giữa các bộ điều khiển
-% flag = 0: Không điều khiển; flag = 1: PID; flag = 2: CLF; flag = 3: CBF
-flag = 1;
+% flag = 0: Không điều khiển; flag = 1: PID; 
+% flag = 2: CLF; flag = 3: CBF; flag = 4: CBF + Hàm của anh Cảnh
+flag = 3;
 
 %--------------------------------------------------------------------------
 %    Mô phỏng chuyển động của dầm Euler - Bernoulli trong mô hình SMC
@@ -16,7 +17,7 @@ L = 0.63; EI = 0.5; rho_A = 0.297;
 mw = 13.1; mk = 0.04; mh = 0.86; g = 9.81;
 
 % Thiết lập thông số không gian và thời gian
-n = 9; r = 15000;
+n = 20; r = 1500000;
 tmax = 15;
 delta_Y = L/(n - 1); % Bước không gian
 delta_t = tmax/(r - 1); % Bước thời gian
@@ -36,7 +37,7 @@ kn_R = 1;
 alpha_1B = 15; kmax = 2*10^-3; alpha_3 = 0.01; k3 = 30; 
 k0 = 10; kc = 0.001; 
 % Hàm của anh Cảnh
-alpha_4 = 0.1; alpha_0 = 0.1;
+alpha_4 = 0.5; alpha_0 = 0.2;
 
 % Xe nâng
 kn_B = 1;
@@ -44,7 +45,7 @@ kn_B = 1;
 %                            Bộ thông số PID
 %--------------------------------------------------------------------------
 I = 0; % Khởi tạo giá trị tính tích phân
-kp1 = 16; kd1 = 20; % Hệ số 2 khâu PD cho xe con
+kp1 = 20; kd1 = 20; % Hệ số 2 khâu PD cho xe con
 kp2 = 20; kd2 = 30; % Hệ số 2 khâu PD cho xe nâng
 
 % Khởi tạo ma trận để lưu giá trị
@@ -165,8 +166,7 @@ for j = 3:(r - 1)
         z = w(n,j + 1) - w(1,j + 1);
         wy0 = (w(1,j + 1) - w(1,j - 1))/(2*delta_t);
         coef = kc/(kmax^2 - z^2)*log(10);
-        F1(j + 2) = -alpha_1B*(w(1,j + 1) - x1_set) - gamma*wy0 - coef*kmax*k0*wy0 - coef*kmax ... 
-                - alpha_4*abs(w(n,j + 1) - w(0,j + 1))*alpha_0*wy0 + alpha_4*(w(n,j + 1) - w(0,j + 1));
+        F1(j + 2) = -alpha_1B*(w(1,j + 1) - x1_set) - gamma*wy0 + alpha_4*(w(n,j + 1) - w(1,j + 1));
         
         % Xe nâng
         wyx2 = (w(x2 + 1,j + 1) - w(x2,j + 1))/delta_Y;

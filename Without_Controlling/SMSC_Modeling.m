@@ -6,13 +6,13 @@ clear;
 %--------------------------------------------------------------------------
 
 % Thiết lập các thông số cho dầm
-L = 0.63; EI = 0.754; rho_A = .297;
+L = 1; EI = 14.97; rho_A = 2.1;
 % Các vật nặng 
-mw = 13.1; mk = 0.04; mh = 0.86; g = 9.81;
+mw = 15; mk = 0.2; mh = 0.9; g = 9.81;
 
 % Thiết lập thông số không gian và thời gian
-n = 9; r = 15000;
-tmax = 15;
+n = 9; r = 10000;
+tmax = 10;
 delta_Y = L/(n - 1); % Bước không gian
 delta_t = tmax/(r - 1); % Bước thời gian
 
@@ -25,11 +25,12 @@ wx2(1:3) = delta_Y;
 
 % Lực tác động vào xe con
 F1 = zeros(1,r);
-F1(1:r) = 1; 
+F1(1:1000) = 10;
+F1(1001:2000) = -10;
 
 % Lực tác động vào xe nâng
 F2 = zeros(1,r);
-F2(1:r/4) = 9; F2(r/2:3*r/4) = 9;
+F2(1:2000) = 9;
 
 %--------------------------------------------------------------------------
 for j = 3:(r - 1)
@@ -80,34 +81,53 @@ end
 t_tr = 0:delta_t:tmax;
 
 % Vẽ đồ thị
+figure(1);
 subplot(2,2,1);
 grid on;
 hold on;
-plot(t_tr,w(1,:),'b','LineWidth',1.5);
-title({'Vị trí của xe con'});
-ylabel('Vị trí xe con (m)','FontSize',12);
-xlabel('Thời gian (s)','FontSize',12);
+plot(t_tr,w(1,:),'Color',[0.07,0.62,1.00],'LineWidth',2);
+% title({'Vị trí của xe con'});
+ylabel('x1(t) (m)','FontSize',12);
+xlabel('t (s)','FontSize',12);
+axis([0 10 0 1]);
 
 subplot(2,2,2);
 grid on;
 hold on;
-plot(t_tr,w(n,:) - w(1,:),'g','LineWidth',1); % Vị trí tương đối của mk so với xe con
-title({'Độ lắc đỉnh thanh'});
-ylabel('Độ lắc so với vị trí cân bằng (m)','FontSize',12);
-xlabel('Thời gian (s)','FontSize',12);
+plot(t_tr,w(n,:) - w(1,:),'Color',[0.07,0.62,1.00],'LineWidth',2); 
+% Vị trí tương đối của mk so với xe con
+% title({'Độ lắc đỉnh thanh'});
+ylabel('x4(t) (m)','FontSize',12);
+xlabel('t (s)','FontSize',12);
+axis([0 10 -3.5*10^-3 3.5*10^-3]);
 
 subplot(2,2,3);
 grid on;
 hold on;
-plot(t_tr,wx2,'r','LineWidth',1.5);
-title({'Vị trí xe nâng'});
-ylabel('Vị trí xe nâng (m)','FontSize',12);
-xlabel('Thời gian (s)','FontSize',12);
+plot(t_tr,wx2,'Color',[1 0.5 0],'LineWidth',2);
+% title({'Vị trí xe nâng'});
+ylabel('x2(t) (m)','FontSize',12);
+xlabel('t (s)','FontSize',12);
+axis([0 10 0 1]);
 
 subplot(2,2,4);
 grid on;
 hold on;
-plot(t_tr,x3,'Color',[1 0.5 0],'LineWidth',1);
-title({'Độ lắc xe nâng'});
-ylabel('Độ lắc xe nâng (m)','FontSize',12);
-xlabel('Thời gian (s)','FontSize',12);
+plot(t_tr,x3,'Color',[1 0.5 0],'LineWidth',2);
+% title({'Độ lắc xe nâng'});
+ylabel('x3(t) (m)','FontSize',12);
+xlabel('t (s)','FontSize',12);
+axis([0 10 -3.5*10^-3 3.5*10^-3]);
+
+% Dao động cả thanh
+figure('Position', [100 100 600 400]);
+xc = w - w(1,:);
+xc1 = xc';
+[X, Y] = meshgrid(0:delta_t:tmax,0:delta_Y:L);
+meshc(Y, X, xc);
+ylabel('t (s)');
+xlabel('Y (m)');
+zlabel('w(Y,t) (m)');
+view(65,10);
+axis([0 1 0 10 -3.5*10^-3 3.5*10^-3]);
+yticks([0 2 4 6 8 10]);

@@ -9,7 +9,7 @@ n=9;r=15000;
 % Chọn bộ điều khiển + SP 
 sp1=1;sp2=0.5;
 flag =5;
-IS =1;
+IS =3;
 w_change=0;
 l_change=0 ;
 e=zeros(1,r);
@@ -123,7 +123,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                              
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % flag =0 = check 
-% flag = 1 = robust -PD
+% flag = 1 = robunit_stept -PD
 % flag = 2 = barrier
 if flag == 0
 F1(1:r/2)=10;
@@ -133,8 +133,8 @@ check2= zeros(1,r);
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                              
 if flag == 1 
-%ROBUST-PD
-%thông số robust - PD
+%ROBunit_stepT-PD
+%thông số robunit_stept - PD
 k1=-5;kx=10;
 kn=1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
@@ -197,13 +197,13 @@ end
 if flag ==5
     % ADRC rời rạc hóa + IS
     if IS==1
-     spIS1= sp1*(1/2*us(j*dt)+1/2*us(j*dt-0.081511));
+     spIS1= sp1*(1/2*unit_step(j*dt)+1/2*unit_step(j*dt-0.081511));
     end
      if IS==2
-     spIS1= sp1*(1/4*us(j*dt)+1/2*us(j*dt-0.081511)+1/4*us(j*dt-0.163022));
+     spIS1= sp1*(1/4*unit_step(j*dt)+1/2*unit_step(j*dt-0.081511)+1/4*unit_step(j*dt-0.163022));
      end
      if IS ==3
-     spIS1= sp1*(1/6*us(j*dt)+1/3*us(j*dt-0.054341)+1/3*us(j*dt-0.108681)+1/6*us(j*dt-0.163022));
+     spIS1= sp1*(1/6*unit_step(j*dt)+1/3*unit_step(j*dt-0.054341)+1/3*unit_step(j*dt-0.108681)+1/6*unit_step(j*dt-0.163022));
      end
      %
 x1(j+2)=(1-l1)*x1(j+1)+T_sam*(1-l1)*x2(j+1)+T_sam^2/2*(1-l1)*x3(j+1)+(b0*T_sam^2/2-l1*b0*T_sam^2/2)*F1(j+1)+l1*w(1,j+1);

@@ -13,7 +13,7 @@ dt = tmax/(r - 1);
 ds = L/(n - 1); 
 F1 = zeros(1,r);
 F2 = zeros(1,r);
-F2(:) = mh*g;
+F2(1:2000) = mh*g;
 h = zeros(1,r); h(1:3) = ds; % Vị trí xe nâng
 w3 = zeros(1,r); % Độ lắc tại vị trí xe nâng
 l = 2; % vị trí ban đầu của xe nâng
@@ -29,7 +29,7 @@ sp2(r/2:r) = 0.3;
 % flag = 0: Check 
 % flag = 1: Robust -PD
 % flag = 2: Barrier
-flag = 2;
+flag = 0;
 w_change = 0;
 l_change = 0 ;
 e = zeros(1,r);
@@ -118,7 +118,7 @@ for j = 3:(r - 1)
         end
         if l == 2
             w(i,j + 1) = S2*wssss + C + 2*w(i,j) - w(i,j - 1);
-            w3(j + 1)=0;
+            w3(j + 1) = 0;
         end
         S3 = (EI*(dt^2))/(mk*2*ds^3);
         w(2,j + 1) = w(1,j + 1);
