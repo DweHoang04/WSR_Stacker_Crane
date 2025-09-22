@@ -4,23 +4,23 @@ clear;
 
 % Cờ để thay đổi giữa ADRC và ADRC + IS
 % flag = 1: ADRC; flag = 2: ADRC + IS
-flag = 1; 
+flag = 2; 
 % Cờ để thay đổi giữa các bộ IS
 % flag_is = 1: ZV; flag_is = 2: ZVD; flag = 3: ETM4
-flag_is = 3;
+flag_is = 1;
 
 %--------------------------------------------------------------------------
 %                         Cài đặt các thông số
 %--------------------------------------------------------------------------
 
 % Thiết lập các thông số cho dầm
-L = 0.63; EI = 0.754; rho_A = 0.297;
-% Các vật nặng
-mw = 13.1; mk = 0.04; mh = 0.86; g = 9.81;
+L = 1; EI = 14.97; rho_A = 2.1; % EI = 9.6 thì dao động lên được 5*10^-3
+% Các vật nặng 
+mw = 15; mk = 0.2; mh = 0.9; g = 9.81;
 
 % Thiết lập thông số không gian và thời gian
-n = 9; r = 15000;
-tmax = 15;
+n = 9; r = 10000;
+tmax = 10;
 delta_Y = L/(n - 1); % Bước không gian
 delta_t = tmax/(r - 1); % Bước thời gian
 
@@ -37,12 +37,12 @@ F1(1:r) = 10;
     
 % Lực tác động vào xe nâng
 F2 = zeros(1,r);
-F2(1:r) = mh*g - 0.1;
+% F2(1:r) = mh*g - 0.1;
 
 %--------------------------------------------------------------------------
 %                        Thông số bộ điều khiển ADRC
 %--------------------------------------------------------------------------
-T_set = 2; % Thời gian xác lập (s)
+T_set = 3; % Thời gian xác lập (s)
 T_sample = 0.001; % Chu kỳ trích mẫu
 s_CL = -6/T_set; % Điểm cực hàm truyền hệ kín
 % Hệ số tỉ lệ
@@ -57,12 +57,15 @@ l2 = (3*(1 - z_ESO)^2*(1 + z_ESO))/(2*T_sample);
 l3 = (1 - z_ESO)^3/(T_sample^2);
 
 Ad = [1 T_sample (T_sample^2)/2; 0 1 T_sample; 0 0 1];
-Bd = [b01*(T_sample^2)/2; b01*T_sample; 0];
+Bd1 = [b01*(T_sample^2)/2; b01*T_sample; 0];
+Bd2 = [b02*(T_sample^2)/2; b02*T_sample; 0];
+
 Cd = [1 0 0];
 Lc = [l1; l2; l3];
 
 A_ESO = Ad - Lc*Cd*Ad;
-B_ESO = Bd - Lc*Cd*Bd;
+B_ESO1 = Bd1 - Lc*Cd*Bd1;
+B_ESO2 = Bd2 - Lc*Cd*Bd2;
 
 % Biến trạng thái xk = [x1k; x2k; x3k]
 xd = zeros(3,r); 
@@ -73,10 +76,10 @@ x2_set = 0.4; % Giá trị đặt xe nâng
 %--------------------------------------------------------------------------
 %                       Thông số bộ tạo dạng tín hiệu
 %--------------------------------------------------------------------------
-f = 6.13415; % Tần số dao động riêng của hệ
+f = 5.60112; % Tần số dao động riêng của hệ
 
-zeta = 0.01; K = exp((zeta*pi)/sqrt(1 - zeta^2)); 
-mopt = 0.99; % Giá trị tối ưu cho bộ ETM
+zeta = 0; K = exp((zeta*pi)/sqrt(1 - zeta^2)); 
+mopt = 1; % Giá trị tối ưu cho bộ ETM
 
 % Các thời điểm của các vector xung
 t2 = 1/(2*f); t3 = 1/f;
@@ -133,12 +136,12 @@ for j = 3:(r - 1)
 %--------------------------------------------------------------------------
     if flag == 1
         % Xe con    
-        xd(:,j + 2) = A_ESO*xd(:,j + 1) + B_ESO*F1(j + 1) + Lc*w(1,j + 1);
+        xd(:,j + 2) = A_ESO*xd(:,j + 1) + B_ESO1*F1(j + 1) + Lc*w(1,j + 1);
         F1(j + 2) = (Kp*(x1_set - xd(1,j + 2)) ...
                     - Kd*xd(2,j + 2) - xd(3,j + 2))/b01;
     
         % Xe nâng
-        xl(:,j + 2) = A_ESO*xl(:,j + 1) + B_ESO*(F2(j + 1) - mh*g) ...
+        xl(:,j + 2) = A_ESO*xl(:,j + 1) + B_ESO2*(F2(j + 1) - mh*g) ...
                       + Lc*dx2dt_2(j + 1);
         F2(j + 2) = (Kp*(x2_set - xl(1,j + 2)) - Kd*xl(2,j + 2) ...
                     - xl(3,j + 2))/b02 + mh*g;
@@ -172,11 +175,11 @@ for j = 3:(r - 1)
         x_IS(j) = x1_set_is;
         % ADRC
         % Xe con
-        xd(:,j + 2) = A_ESO*xd(:,j + 1) + B_ESO*F1(j + 1) + Lc*w(1,j + 1);
+        xd(:,j + 2) = A_ESO*xd(:,j + 1) + B_ESO1*F1(j + 1) + Lc*w(1,j + 1);
         F1(j + 2) = (Kp*(x1_set_is - xd(1,j + 2)) - Kd*xd(2,j + 2) - xd(3,j + 2))/b01;
         
         % Xe nâng
-        xl(:,j + 2) = A_ESO*xl(:,j + 1) + B_ESO*(F2(j + 1) - mh*g) + Lc*dx2dt_2(j + 1);
+        xl(:,j + 2) = A_ESO*xl(:,j + 1) + B_ESO2*(F2(j + 1) - mh*g) + Lc*dx2dt_2(j + 1);
         F2(j + 2) = (Kp*(x2_set - xl(1,j + 2)) - Kd*xl(2,j + 2) - xl(3,j + 2))/b02 + mh*g;
     end
 end
@@ -190,27 +193,38 @@ figure(1);
 subplot(2,2,1);
 grid on;
 hold on;
-plot(t_tr,w(1,:),'g','LineWidth',1.5);
-title({'Vị trí của xe con'});
-ylabel('Vị trí xe con (m)','FontSize',12);
-xlabel('Thời gian (s)','FontSize',12);
+% Vị trí xe con
+plot(t_tr,w(1,:),'Color',[0.07,0.62,1.00],'LineWidth',2);
+ylabel('x1(t) (m)','FontSize',12);
+xlabel('t (s)','FontSize',12);
+p1 = plot(2.915,0.98,'o','MarkerSize',5,'MarkerEdgeColor',[0.5020, 0.0, 0.5020],'LineWidth',1.5,'MarkerIndices',1);
+p2 = plot(5.356,1,'o','MarkerSize',5,'MarkerEdgeColor','red','LineWidth',1.5,'MarkerIndices',1);
+p3 = plot(5.459,0.9996,'o','MarkerSize',5,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
+p4 = plot(8.929,1.0002,'o','MarkerSize',5,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
+axis([0 10 0 1.2]);
 
 subplot(2,2,2);
 grid on;
 hold on;
-% Vị trí tương đối của mk so với xe con
-plot(t_tr,w(n,:) - w(1,:),'b','LineWidth',1.5);
-title({'Độ lắc đỉnh thanh'});
-ylabel('Biên độ dao động (m)','FontSize',12);
-xlabel('Thời gian (s)','FontSize',12);
+% Độ lắc tại đỉnh thanh
+plot(t_tr,w(n,:) - w(1,:),'Color',[0.07,0.62,1.00],'LineWidth',2); 
+ylabel('x4(t) (m)','FontSize',12);
+xlabel('t (s)','FontSize',12);
+axis([0 10 -4*10^-3 4*10^-3]);
 
 subplot(2,2,3);
 grid on;
 hold on;
-plot(t_tr,dx2dt_2,'r','LineWidth',1.5);
-title({'Vị trí xe nâng'});
-ylabel('Vị trí xe nâng (m)','FontSize',12);
-xlabel('Thời gian (s)','FontSize',12);
+% Vị trí xe nâng
+plot(t_tr,dx2dt_2,'Color',[1 0.5 0],'LineWidth',1.5);
+ylabel('x2(t) (m)','FontSize',12);
+xlabel('t (s)','FontSize',12);
+p11 = plot(0.382,0.1251,'o','MarkerSize',5,'MarkerEdgeColor',[0.7804, 0.0824, 0.5216],'LineWidth',1.5,'MarkerIndices',1);
+p21 = plot(3.082,0.392,'o','MarkerSize',5,'MarkerEdgeColor',[0.5020, 0.0, 0.5020],'LineWidth',1.5,'MarkerIndices',1);
+p31 = plot(5.478,0.4,'o','MarkerSize',5,'MarkerEdgeColor','red','LineWidth',1.5,'MarkerIndices',1);
+p41 = plot(5.553,0.3999,'o','MarkerSize',5,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
+p51 = plot(8.993,0.4001,'o','MarkerSize',5,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
+axis([0 10 0 0.45]);
 
 subplot(2,2,4);
 grid on;
@@ -221,19 +235,40 @@ ylabel('Độ lắc xe nâng (m)','FontSize',12);
 xlabel('Thời gian (s)','FontSize',12);
 
 figure(2);
-subplot(1,2,1);
+% Lực F1
 grid on;
 hold on;
-plot(t_tr,F1(1:r),'LineWidth',1.5);
-ylabel('Độ lớn lực F1 (N)','FontSize',12);
-xlabel('Thời gian (s)','FontSize',12);
-
-subplot(1,2,2);
-grid on;
-hold on;
-plot(t_tr,F2(1:r),'LineWidth',1.5);
-ylabel('Độ lớn lực F2 (N)','FontSize',12);
-xlabel('Thời gian (s)','FontSize',12);
+plot(t_tr,F1(1:r),'Color',[0.07,0.62,1.00],'LineWidth',2.5);
+ylabel('F1 (N)','FontSize',12);
+xlabel('t (s)','FontSize',12);
+p12 = plot(0.0040004,59.9599,'o','MarkerSize',10,'MarkerEdgeColor','red','LineWidth',3,'MarkerIndices',1);
+p22 = plot(1.070,-8.0297,'o','MarkerSize',10,'MarkerEdgeColor',[0.5020, 0.0, 0.5020],'LineWidth',3,'MarkerIndices',1);
+axis([5 6 -1 1]);
 
 figure(3)
+% Lực F2
+grid on;
+hold on;
+plot(t_tr,F2(1:r),'Color',[1 0.5 0],'LineWidth',2.5);
+ylabel('F2 (N)','FontSize',12);
+xlabel('t (s)','FontSize',12);
+p13 = plot(0.0040004,59.9599,'o','MarkerSize',10,'MarkerEdgeColor','red','LineWidth',3,'MarkerIndices',1);
+p23 = plot(1.070,-8.0297,'o','MarkerSize',10,'MarkerEdgeColor',[0.5020, 0.0, 0.5020],'LineWidth',3,'MarkerIndices',1);
+axis([0 10 -8 10]);
+
+figure(4)
 plot(t_tr,x_IS(:));
+
+figure(5)
+Fs = 1/delta_t;
+time = 0:delta_t:(r - 2)*delta_t - delta_t;
+l1 = r;
+fft_w = fft(w(n,:) - w(1,:),l1)*(2/l1);
+abs_w = abs(fft_w);
+freq = 0:(1/time(end)):Fs/2 - (1/time(end));
+plot(freq,abs_w(1:length(freq)),'Color',[0.07,0.62,1.00],'LineWidth',2);
+hold on;
+grid on;
+xlabel('f (Hz)');
+ylabel('Biên độ (m)');
+axis([0 16 0 5.5*10^-3])

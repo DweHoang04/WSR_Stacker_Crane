@@ -6,7 +6,7 @@ clear;
 %--------------------------------------------------------------------------
 
 % Thiết lập các thông số cho dầm
-L = 1; EI = 14.97; rho_A = 2.1;
+L = 1; EI = 14.97; rho_A = 2.1; % EI = 9.6 thì dao động lên được 5*10^-3
 % Các vật nặng 
 mw = 15; mk = 0.2; mh = 0.9; g = 9.81;
 
@@ -22,15 +22,20 @@ x3 = zeros(1,r); % Độ lắc của thanh tại x2 (x3)
 x2 = 2; 
 wx2 = zeros(1,r);
 wx2(1:3) = delta_Y;
-
-% Lực tác động vào xe con
+% 
+% % Lực tác động vào xe con
 F1 = zeros(1,r);
 F1(1:1000) = 10;
 F1(1001:2000) = -10;
 
-% Lực tác động vào xe nâng
+% % Lực tác động vào xe nâng
 F2 = zeros(1,r);
 F2(1:2000) = 9;
+
+% F2(1:r)=mh*g;
+% F1(1:1500)=10;
+% F2(1:1500)=mh*g+10;
+% F1(1501:3000)=-10;
 
 %--------------------------------------------------------------------------
 for j = 3:(r - 1)
@@ -61,7 +66,7 @@ for j = 3:(r - 1)
         end
 
         % Độ lắc của thanh
-        if wx2(j + 1) ~= x2
+        if wx2(j + 1) ~= x2*delta_Y
             w(i,j + 1) = 2*w(i,j) - w(i,j - 1) + delta_t^2*S1; % 5a
             x3(j + 1) = w(i,j + 1) - w(1,j + 1);
         else
@@ -90,6 +95,9 @@ plot(t_tr,w(1,:),'Color',[0.07,0.62,1.00],'LineWidth',2);
 ylabel('x1(t) (m)','FontSize',12);
 xlabel('t (s)','FontSize',12);
 axis([0 10 0 1]);
+p1 = plot(1,0.3483,'o','MarkerSize',5,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
+p2 = plot(2,0.6960,'o','MarkerSize',5,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
+p3 = plot(10,0.6792,'o','MarkerSize',5,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
 
 subplot(2,2,2);
 grid on;
@@ -108,6 +116,8 @@ plot(t_tr,wx2,'Color',[1 0.5 0],'LineWidth',2);
 % title({'Vị trí xe nâng'});
 ylabel('x2(t) (m)','FontSize',12);
 xlabel('t (s)','FontSize',12);
+p11 = plot(1.462,0.875,'o','MarkerSize',5,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
+p21 = plot(2.431,0.125,'o','MarkerSize',5,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
 axis([0 10 0 1]);
 
 subplot(2,2,4);

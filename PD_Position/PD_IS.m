@@ -288,6 +288,7 @@ ylabel('$F_1$(N)', 'Interpreter', 'latex');
 axis([0 10 -10 55]);
 hold on
 grid on
+
 subplot(2,2,4)
 plot(freq,1000*abs_w(1:length(freq)),'k','linewidth',1);
 xlabel('$f$(Hz)', 'Interpreter', 'latex');
