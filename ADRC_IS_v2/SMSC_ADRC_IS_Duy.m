@@ -4,9 +4,9 @@ clear;
 
 % Cờ để thay đổi giữa ADRC và ADRC + IS
 % flag = 1: ADRC; flag = 2: ADRC + IS
-flag = 2; 
+flag = 1; 
 % Cờ để thay đổi giữa các bộ IS
-% flag_is = 1: ZV; flag_is = 2: ZVD; flag = 3: ETM4
+% flag_is = 1: ZV; flag_is = 2: ZVD; flag = 3: ETM4; flag = 4: TVZV
 flag_is = 1;
 
 %--------------------------------------------------------------------------
@@ -43,7 +43,7 @@ F2 = zeros(1,r);
 %                        Thông số bộ điều khiển ADRC
 %--------------------------------------------------------------------------
 T_set = 3; % Thời gian xác lập (s)
-T_sample = 0.001; % Chu kỳ trích mẫu
+T_sample = delta_t; % Chu kỳ trích mẫu
 s_CL = -6/T_set; % Điểm cực hàm truyền hệ kín
 % Hệ số tỉ lệ
 Kp = s_CL^2; Kd = -2*s_CL; K_ESO = 10; b01 = 1/mw; b02 = 1/mh;
@@ -146,9 +146,9 @@ for j = 3:(r - 1)
         F2(j + 2) = (Kp*(x2_set - xl(1,j + 2)) - Kd*xl(2,j + 2) ...
                     - xl(3,j + 2))/b02 + mh*g;
     end
-%--------------------------------------------------------------------------
+%-----------------------------------------------------------------------
 %                      Bộ tạo dạng tín hiệu IS + ADRC
-%--------------------------------------------------------------------------
+%-----------------------------------------------------------------------
     if flag == 2
         % IS
         if flag_is == 1 
@@ -190,85 +190,276 @@ t_tr = 0:delta_t:tmax;
 
 % Vẽ đồ thị
 figure(1);
-subplot(2,2,1);
 grid on;
 hold on;
 % Vị trí xe con
-plot(t_tr,w(1,:),'Color',[0.07,0.62,1.00],'LineWidth',2);
-ylabel('x1(t) (m)','FontSize',12);
-xlabel('t (s)','FontSize',12);
-p1 = plot(2.915,0.98,'o','MarkerSize',5,'MarkerEdgeColor',[0.5020, 0.0, 0.5020],'LineWidth',1.5,'MarkerIndices',1);
-p2 = plot(5.356,1,'o','MarkerSize',5,'MarkerEdgeColor','red','LineWidth',1.5,'MarkerIndices',1);
-p3 = plot(5.459,0.9996,'o','MarkerSize',5,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
-p4 = plot(8.929,1.0002,'o','MarkerSize',5,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
+plot(t_tr,w(1,:),'Color',[0.07,0.62,1.00],'LineWidth',4);
+title('\textbf{Driving Unit Position}', 'Interpreter','latex', 'FontSize', 30);
+ylabel('$x_1(t)\ \mathrm{(m)}$', 'Interpreter','latex', 'FontSize', 20);
+xlabel('Time (s)','Interpreter','latex','FontSize', 20);
 axis([0 10 0 1.2]);
 
-subplot(2,2,2);
+% Zoom inset
+zoom_x_start = 2;
+zoom_x_end   = 10;
+zoom_y_start = 0.95;
+zoom_y_end   =  1.05;
+rectangle('Position', ...
+    [zoom_x_start, zoom_y_start, ...
+     zoom_x_end-zoom_x_start, zoom_y_end-zoom_y_start], ...
+    'EdgeColor','red','LineWidth',2);
+axes('Position',[0.4 0.2 0.5 0.4]);
+box on; hold on; grid on;
+plot(t_tr, w(1,:), 'Color',[0.07,0.62,1.00], 'LineWidth',3);
+xlim([zoom_x_start zoom_x_end]);
+ylim([zoom_y_start zoom_y_end]);
+set(gca,'FontSize',8);
+p1 = plot(2.915,0.98,'o','MarkerSize',7,'MarkerEdgeColor',[0.5020, 0.0, 0.5020],'LineWidth',1.5,'MarkerIndices',1);
+p2 = plot(5.356,1,'o','MarkerSize',7,'MarkerEdgeColor','red','LineWidth',1.5,'MarkerIndices',1);
+p3 = plot(5.459,0.9996,'o','MarkerSize',7,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
+p4 = plot(8.929,1.0002,'o','MarkerSize',7,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
+
+text(2.915+0.3, 0.98, '$(2.915,\;0.98)$', ...
+    'Interpreter','latex','FontSize',20, ...
+    'Color',[0.5020 0 0.5020]);
+text(5.356-1.76, 1.00+0.009, '$(5.356,\;1.00)$', ...
+    'Interpreter','latex','FontSize',20, ...
+    'Color','red');
+text(5.459+0.2, 0.9996-0.009, '$(5.459,\;0.9996)$', ...
+    'Interpreter','latex','FontSize',20, ...
+    'Color','black');
+text(8.929-0.9, 1.0002+0.009, '$(8.929,\;1.0002)$', ...
+    'Interpreter','latex','FontSize',20, ...
+    'Color','black');
+annotation('arrow', [0.6 0.65], [0.754 0.6], ...
+    'Color','red','LineWidth',2,'HeadStyle','vback2');
+title('\textbf{Zoom View}','Interpreter','latex','FontSize',20);
+
+%-----------------------------------------------------------------------
+figure(2); clf
+grid on; hold on        
+axMain = gca;
+hold(axMain,'on'); grid(axMain,'on')
+plot(axMain, t_tr, dx2dt_2, ...
+    'Color',[1 0.5 0],'LineWidth',4);
+title(axMain,'\textbf{Lifting Unit Position}', ...
+    'Interpreter','latex','FontSize',30);
+ylabel(axMain,'$x_2(t)\; \mathrm{(m)}$', ...
+    'Interpreter','latex','FontSize',20);
+xlabel(axMain,'Time (s)', ...
+    'Interpreter','latex','FontSize',20);
+axis(axMain,[0 10 0 0.45]);
+plot(axMain, 0.382,0.1251,'o', ...
+    'MarkerSize',7,'LineWidth',1.5, ...
+    'MarkerEdgeColor',[0.7804, 0.0824, 0.5216]);
+text(axMain, 0.382+0.3, 0.1251, ...
+    '$(0.382,\;0.1251)$', ...
+    'Interpreter','latex','FontSize',20, ...
+    'Color',[0.7804 0.0824 0.5216]);
+
+% Zoom inset
+zoom_x_start = 2.5;
+zoom_x_end   = 10;
+zoom_y_start = 0.39;
+zoom_y_end   = 0.41;
+rectangle(axMain,'Position', ...
+    [zoom_x_start, zoom_y_start, ...
+     zoom_x_end-zoom_x_start, ...
+     zoom_y_end-zoom_y_start], ...
+    'EdgeColor','red','LineWidth',2);
+axZoom = axes('Position',[0.4 0.2 0.5 0.4]); 
+box(axZoom,'on'); grid(axZoom,'on'); hold(axZoom,'on')
+plot(axZoom, t_tr, dx2dt_2, ...
+    'Color',[1 0.5 0],'LineWidth',3);
+xlim(axZoom,[zoom_x_start zoom_x_end]);
+ylim(axZoom,[zoom_y_start zoom_y_end]);
+
+set(axZoom,'FontSize',8);
+plot(axZoom, 3.082,0.392,'o','MarkerSize',7,'LineWidth',1.5,...
+    'MarkerEdgeColor',[0.5020 0 0.5020]);
+plot(axZoom, 5.478,0.4,'o','MarkerSize',7,'LineWidth',1.5,...
+    'MarkerEdgeColor','red');
+plot(axZoom, 5.553,0.3999,'o','MarkerSize',7,'LineWidth',1.5,...
+    'MarkerEdgeColor','black');
+plot(axZoom, 8.993,0.4001,'o','MarkerSize',7,'LineWidth',1.5,...
+    'MarkerEdgeColor','black');
+
+text(axZoom, 3.082+0.2,0.392,'$(3.082,\;0.392)$', ...
+    'Interpreter','latex','FontSize',20, ...
+    'Color',[0.5020 0 0.5020]);
+text(axZoom, 5.478-1.43,0.4+0.0015,'$(5.478,\;0.4)$', ...
+    'Interpreter','latex','FontSize',20,'Color','red');
+text(axZoom, 5.553+0.2,0.3999-0.0015,'$(5.553,\;0.3999)$', ...
+    'Interpreter','latex','FontSize',20,'Color','black');
+text(axZoom, 8.993-0.92,0.4001+0.0015,'$(8.993,\;0.4001)$', ...
+    'Interpreter','latex','FontSize',20,'Color','black');
+annotation('arrow', [0.6 0.65], [0.815 0.6], ...
+    'Color','red','LineWidth',2,'HeadStyle','vback2');
+title(axZoom,'\textbf{Zoom View}', 'Interpreter','latex','FontSize',20);
+
+%--------------------------------------------------------------------------
+figure(3)
 grid on;
 hold on;
 % Độ lắc tại đỉnh thanh
 plot(t_tr,w(n,:) - w(1,:),'Color',[0.07,0.62,1.00],'LineWidth',2); 
-ylabel('x4(t) (m)','FontSize',12);
-xlabel('t (s)','FontSize',12);
-axis([0 10 -4*10^-3 4*10^-3]);
+title('\textbf{Beam''s Top Vibration}', 'Interpreter','latex', 'FontSize', 30);
+ylabel('$x_4(t)\ \mathrm{(m)}$', 'Interpreter','latex', 'FontSize', 20);
+xlabel('Time (s)', 'Interpreter','latex', 'FontSize', 20);
+axis([0 10 -8.5*10^-3 8.5*10^-3]);
 
-subplot(2,2,3);
-grid on;
-hold on;
-% Vị trí xe nâng
-plot(t_tr,dx2dt_2,'Color',[1 0.5 0],'LineWidth',1.5);
-ylabel('x2(t) (m)','FontSize',12);
-xlabel('t (s)','FontSize',12);
-p11 = plot(0.382,0.1251,'o','MarkerSize',5,'MarkerEdgeColor',[0.7804, 0.0824, 0.5216],'LineWidth',1.5,'MarkerIndices',1);
-p21 = plot(3.082,0.392,'o','MarkerSize',5,'MarkerEdgeColor',[0.5020, 0.0, 0.5020],'LineWidth',1.5,'MarkerIndices',1);
-p31 = plot(5.478,0.4,'o','MarkerSize',5,'MarkerEdgeColor','red','LineWidth',1.5,'MarkerIndices',1);
-p41 = plot(5.553,0.3999,'o','MarkerSize',5,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
-p51 = plot(8.993,0.4001,'o','MarkerSize',5,'MarkerEdgeColor','black','LineWidth',1.5,'MarkerIndices',1);
-axis([0 10 0 0.45]);
+% Zoom inset
+zoom_x_start = 3;
+zoom_x_end   = 4;
+zoom_y_start = -7e-3;
+zoom_y_end   =  7e-3;
+rectangle('Position', ...
+    [zoom_x_start, zoom_y_start, ...
+     zoom_x_end-zoom_x_start, zoom_y_end-zoom_y_start], ...
+    'EdgeColor','red','LineWidth',2);
+axes('Position',[0.60 0.47 0.35 0.4]);
+box on; hold on; grid on;
+plot(t_tr, w(n,:) - w(1,:), 'Color',[0.07,0.62,1.00], 'LineWidth',1.2);
+xlim([zoom_x_start zoom_x_end]);
+ylim([zoom_y_start zoom_y_end]);
+set(gca,'FontSize',8);
+annotation('arrow', [0.44 0.6], [0.5 0.68], ...
+    'Color','red','LineWidth',2,'HeadStyle','vback2');
 
-subplot(2,2,4);
-grid on;
-hold on;
-plot(t_tr,x3,'Color',[1 0.5 0],'LineWidth',1.5);
-title({'Độ lắc xe nâng'});
-ylabel('Độ lắc xe nâng (m)','FontSize',12);
-xlabel('Thời gian (s)','FontSize',12);
+y_max =  5.5e-3;
+y_min = -5.2e-3;
+plot([3 4], [y_max y_max], 'r--', 'LineWidth',2);
+plot([3 4], [y_min y_min], 'r--', 'LineWidth',2);
+x_arrow = 3.5;
+line([x_arrow x_arrow], [y_min y_max], 'Color','r','LineWidth',1.5);
+plot(x_arrow, 5.3e-3, '^r', 'MarkerFaceColor','r');
+plot(x_arrow, -5e-3, 'vr', 'MarkerFaceColor','r');
+text(x_arrow-0.15, 0, '$10.6\times10^{-3}\ \mathrm{m}$', ...
+    'Interpreter','latex','FontSize',20, ...
+    'BackgroundColor','white','EdgeColor','red');
+title('\textbf{Zoom View}','Interpreter','latex','FontSize',20);
 
-figure(2);
-% Lực F1
-grid on;
-hold on;
-plot(t_tr,F1(1:r),'Color',[0.07,0.62,1.00],'LineWidth',2.5);
-ylabel('F1 (N)','FontSize',12);
-xlabel('t (s)','FontSize',12);
-p12 = plot(0.0040004,59.9599,'o','MarkerSize',10,'MarkerEdgeColor','red','LineWidth',3,'MarkerIndices',1);
-p22 = plot(1.070,-8.0297,'o','MarkerSize',10,'MarkerEdgeColor',[0.5020, 0.0, 0.5020],'LineWidth',3,'MarkerIndices',1);
-axis([5 6 -1 1]);
+%--------------------------------------------------------------------------
+figure(4); clf
+grid on; hold on
+axMain = gca;
+hold(axMain,'on'); grid(axMain,'on')
+plot(axMain, t_tr, F1(1:r), ...
+    'Color',[0.07,0.62,1.00],'LineWidth',2.5);
+title(axMain,'\textbf{Driving Unit''s Actuated Force}', ...
+    'Interpreter','latex','FontSize',30);
+ylabel(axMain,'$F_1(t)\ \mathrm{(N)}$', ...
+    'Interpreter','latex','FontSize',20);
+xlabel(axMain,'Time (s)', ...
+    'Interpreter','latex','FontSize',20);
+axis(axMain,[0 10 -10 65]);
+plot(axMain,0.0040004,59.9599,'o','MarkerSize',10,...
+    'MarkerEdgeColor','red','LineWidth',3);
+plot(axMain,1.070,-8.0297,'o','MarkerSize',10,...
+    'MarkerEdgeColor',[0.5020 0 0.5020],'LineWidth',3);
+text(axMain, 0.0040004+0.2, 59.9599, ...
+    '$(0.004,\;59.9599)$', ...
+    'Interpreter','latex', ...
+    'FontSize',20, ...
+    'Color','red');
+text(axMain, 1.070-0.55, -8.0297+8.2, ...
+    '$(1.070,\;-8.0297)$', ...
+    'Interpreter','latex', ...
+    'FontSize',20, ...
+    'Color',[0.5020 0 0.5020]);
 
-figure(3)
-% Lực F2
-grid on;
-hold on;
-plot(t_tr,F2(1:r),'Color',[1 0.5 0],'LineWidth',2.5);
-ylabel('F2 (N)','FontSize',12);
-xlabel('t (s)','FontSize',12);
-p13 = plot(0.0040004,59.9599,'o','MarkerSize',10,'MarkerEdgeColor','red','LineWidth',3,'MarkerIndices',1);
-p23 = plot(1.070,-8.0297,'o','MarkerSize',10,'MarkerEdgeColor',[0.5020, 0.0, 0.5020],'LineWidth',3,'MarkerIndices',1);
-axis([0 10 -8 10]);
+% Zoom inset
+zoom_x_start = 5;
+zoom_x_end   = 6;
+zoom_y_start = -1;
+zoom_y_end   =  1;
+rectangle('Position', ...
+    [zoom_x_start, zoom_y_start, ...
+     zoom_x_end-zoom_x_start, ...
+     zoom_y_end-zoom_y_start], ...
+    'EdgeColor',[1 0.5 0], 'LineWidth',2);
+axZoom = axes('Position',[0.5 0.45 0.35 0.4]);
+box on; hold on; grid on;
+plot(t_tr, F1(1:r), 'Color',[0.07 0.62 1.00], 'LineWidth',1.6);
+xlim([zoom_x_start zoom_x_end]);
+ylim([zoom_y_start zoom_y_end]);
+set(gca,'FontSize',8);
+title('\textbf{Zoom View}', ...
+    'Interpreter','latex','FontSize',14);
+y_max =  0.55;
+y_min = -0.57;
+plot([zoom_x_start zoom_x_end], [y_max y_max], ...
+    '--','Color',[1 0.5 0],'LineWidth',2);
+plot([zoom_x_start zoom_x_end], [y_min y_min], ...
+    '--','Color',[1 0.5 0],'LineWidth',2);
+x_arrow = 5.5;
+line([x_arrow x_arrow], [y_min y_max], ...
+    'Color',[1 0.5 0],'LineWidth',1.8);
+plot(x_arrow, y_max-0.05, '^', ...
+    'Color',[1 0.5 0],'MarkerFaceColor',[1 0.5 0]);
+plot(x_arrow, y_min+0.05, 'v', ...
+    'Color',[1 0.5 0],'MarkerFaceColor',[1 0.5 0]);
+text(x_arrow-0.05, 0, ...
+    '$1.1\ \mathrm{N}$', ...
+    'Interpreter','latex','FontSize',20, ...
+    'BackgroundColor','white', ...
+    'EdgeColor',[1 0.5 0], ...
+    'LineWidth',1.5);
+annotation('arrow', ...
+    [0.555 0.675], [0.23 0.437], ...
+    'Color',[1 0.5 0],'LineWidth',2,'HeadStyle','vback2');
 
-figure(4)
-plot(t_tr,x_IS(:));
+%--------------------------------------------------------------------------
+% figure(5)
+% plot(t_tr,x_IS(:));
 
+%--------------------------------------------------------------------------
 figure(5)
-Fs = 1/delta_t;
-time = 0:delta_t:(r - 2)*delta_t - delta_t;
-l1 = r;
-fft_w = fft(w(n,:) - w(1,:),l1)*(2/l1);
-abs_w = abs(fft_w);
-freq = 0:(1/time(end)):Fs/2 - (1/time(end));
-plot(freq,abs_w(1:length(freq)),'Color',[0.07,0.62,1.00],'LineWidth',2);
-hold on;
-grid on;
-xlabel('f (Hz)');
-ylabel('Biên độ (m)');
+Fs = 1/delta_t; 
+time = 0:delta_t:(r - 2)*delta_t - delta_t; 
+l1 = r; 
+fft_w = fft(w(n,:) - w(1,:),l1)*(2/l1); 
+abs_w = abs(fft_w); 
+freq = 0:(1/time(end)):Fs/2 - (1/time(end)); 
+plot(freq,abs_w(1:length(freq)),'Color',[0.07,0.62,1.00],'LineWidth',2); 
+hold on; grid on; 
+title('\textbf{Model''s Natural Frequency}', ... 
+    'Interpreter','latex','FontSize',30); 
+xlabel('$f_n\ \mathrm{(Hz)}$', ... 
+    'Interpreter','latex','FontSize',20); 
+ylabel('Amplitude', ... 
+    'Interpreter','latex','FontSize',20); 
 axis([0 16 0 5.5*10^-3])
+
+axFFT = gca;  
+hold(axFFT,'on');
+f1 = 0.3334;    A1 = 0.000153187;
+f2 = 5.60112;   A2 = 0.00512493;
+f3 = 14.1362;   A3 = 0.000258639;
+plot(axFFT,f1,A1,'ko','MarkerSize',6,'LineWidth',1.5);
+plot(axFFT,f2,A2,'ro','MarkerSize',6,'LineWidth',1.8);
+plot(axFFT,f3,A3,'ko','MarkerSize',6,'LineWidth',1.5);
+text(axFFT, f1+0.4, A1+0.00025, ...
+    '$f = 0.3334\ \mathrm{Hz}$', ...
+    'Interpreter','latex', ...
+    'FontSize',18, ...
+    'Color','black', ...
+    'BackgroundColor','white', ...
+    'EdgeColor','black', ...
+    'LineWidth',1.2);
+text(axFFT, f2+0.5, A2, ...
+    '$f = 5.60112\ \mathrm{Hz}$', ...
+    'Interpreter','latex', ...
+    'FontSize',20, ...
+    'Color','red', ...
+    'BackgroundColor','white', ...
+    'EdgeColor','red', ...
+    'LineWidth',1.6);
+text(axFFT, f3-2.5, A1+0.00025, ...
+    '$f = 14.1362\ \mathrm{Hz}$', ...
+    'Interpreter','latex', ...
+    'FontSize',18, ...
+    'Color','black', ...
+    'BackgroundColor','white', ...
+    'EdgeColor','black', ...
+    'LineWidth',1.2);
